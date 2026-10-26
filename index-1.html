@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Расписание 1Б • Координатор сессии</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #090b10;
+      color: #f3f4f6;
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .glass-card {
+      background: rgba(18, 22, 31, 0.88);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 640px) {
+      .cal-grid { gap: 4px; }
+    }
+    .badge-session { background: rgba(34, 197, 94, 0.16); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.35); }
+    .badge-work24 { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.45); }
+    .badge-exam { background: rgba(239, 68, 68, 0.22); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.5); }
+    .badge-zach { background: rgba(168, 85, 247, 0.22); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.5); }
+    .badge-contest { background: linear-gradient(135deg, rgba(217, 70, 239, 0.3), rgba(99, 102, 241, 0.3)); color: #f0abfc; border: 1px solid rgba(217, 70, 239, 0.6); }
+    .day-selected {
+      outline: 2px solid #6366f1 !important;
+      background: rgba(99, 102, 241, 0.14) !important;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="min-h-screen pb-14 selection:bg-indigo-500 selection:text-white">
+
+  <!-- ВЕРХНЯЯ НАВИГАЦИЯ -->
+  <header class="sticky top-0 z-40 glass-card border-b border-white/10 px-3 sm:px-6 py-3">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center font-extrabold text-white shadow-lg shadow-indigo-500/20">
+          1Б
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-sm sm:text-base tracking-tight text-white">Расписание • Политология</h1>
+            <span id="storageStatusBadge" class="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+              Стенд 26.10
+            </span>
+          </div>
+          <p class="text-[11px] text-gray-400">Минск (UTC+3) • Сессия + Смены 09–09</p>
+        </div>
+      </div>
+
+      <!-- КНОПКИ УПРАВЛЕНИЯ И ОБНОВЛЕНИЯ -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <div class="flex items-center gap-1.5 bg-gray-900/90 border border-white/10 px-2.5 py-1.5 rounded-xl">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="liveClock" class="font-mono text-xs sm:text-sm font-semibold text-white">--:--:--</span>
+        </div>
+
+        <button onclick="togglePushNotifications()" id="pushBtn" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-800/90 hover:bg-gray-700 text-gray-200 border border-white/10 transition flex items-center gap-1.5">
+          <span id="pushIcon">🔕</span> <span class="hidden sm:inline" id="pushText">Авто-пуши</span>
+        </button>
+
+        <button onclick="openSyncModal()" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600/25 hover:bg-emerald-600/40 text-emerald-200 border border-emerald-500/40 transition flex items-center gap-1.5 shadow-sm">
+          🔄 <span>Обновить базу</span>
+        </button>
+
+        <button onclick="toggleTimeMachine()" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600/25 hover:bg-indigo-600/40 text-indigo-200 border border-indigo-500/30 transition flex items-center gap-1">
+          🕹️ <span class="hidden md:inline">Тест времени</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Панель Машины Времени -->
+    <div id="timeMachineDrawer" class="hidden max-w-7xl mx-auto mt-3 pt-3 border-t border-white/10">
+      <div class="flex flex-wrap items-center justify-between gap-2 bg-indigo-950/40 border border-indigo-500/30 rounded-xl p-2.5">
+        <div class="flex items-center gap-2 text-xs text-indigo-200">
+          <span>⚡ <b>Проверка триггеров ассистента:</b></span>
+          <span id="simIndicator" class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[11px]">Реальное время Минска</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button onclick="setSim('2026-10-26T14:50:00')" class="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-[11px]">26.10 (14:50 • 1-я пара)</button>
+          <button onclick="setSim('2026-10-26T15:35:00')" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 text-[11px]">26.10 (15:35 • Окно 1Б)</button>
+          <button onclick="setSim('2026-10-29T19:15:00')" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-[11px]">29.10 (Смена + Пара)</button>
+          <button onclick="setSim('2026-10-30T08:30:00')" class="px-2 py-1 rounded bg-fuchsia-500/20 hover:bg-fuchsia-500/30 text-fuchsia-200 text-[11px]">30.10 (Зачёт)</button>
+          <button onclick="resetSim()" class="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold">Сброс (Сейчас)</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-3 sm:px-6 pt-4 space-y-5">
+
+    <!-- БЛОК 1: СТРОГИЙ ШАБЛОН ОТВЕТА АССИСТЕНТА -->
+    <section class="glass-card rounded-2xl p-4 sm:p-5 border-l-4 border-l-indigo-500 shadow-xl">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+            🤖 Живая сводка по шаблону
+          </span>
+          <span id="triggerStatus" class="text-xs text-gray-400">Авто-контроль расписания 1Б</span>
+        </div>
+        <button onclick="copyTemplateText()" id="copyBtn" class="text-xs px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 transition">
+          📋 Скопировать сводку
+        </button>
+      </div>
+
+      <div id="assistantReportBox" class="bg-gray-950/90 rounded-xl p-3.5 sm:p-4 border border-white/10 font-sans text-xs sm:text-sm leading-relaxed space-y-2.5 text-gray-100">
+      </div>
+    </section>
+
+    <!-- БЛОК 2: КАЛЕНДАРЬ СЛЕВА + ПОДРОБНАЯ СВОДКА ПО ВЫБРАННОМУ ДНЮ СПРАВА -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+      <!-- ЛЕВАЯ КОЛОНКА (7 из 12): СЕТКА КАЛЕНДАРЯ -->
+      <div class="lg:col-span-7 glass-card rounded-2xl p-3.5 sm:p-5">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-white">Календарь сессии (26.10 – 15.11.2026)</h2>
+            <p class="text-xs text-gray-400">Нажми на любой день, чтобы открыть его полную сводку 👉</p>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="selectToday()" class="px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-medium">
+              Сегодня
+            </button>
+          </div>
+        </div>
+
+        <!-- Легенда -->
+        <div class="flex flex-wrap items-center gap-1.5 mb-3 pb-2.5 border-b border-white/10 text-[10px] sm:text-[11px]">
+          <span class="px-2 py-0.5 rounded badge-session font-medium">сессия ВД</span>
+          <span class="px-2 py-0.5 rounded badge-work24 font-medium">работа 09:00–09:00</span>
+          <span class="px-2 py-0.5 rounded badge-zach font-semibold">ЗАЧЁТ</span>
+          <span class="px-2 py-0.5 rounded badge-exam font-semibold">ЭКЗАМЕН</span>
+        </div>
+
+        <!-- Дни недели -->
+        <div class="cal-grid text-center text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+          <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div class="text-rose-400">Сб</div><div class="text-rose-400">Вс</div>
+        </div>
+
+        <!-- Сетка 21 дня -->
+        <div id="calendarGrid" class="cal-grid"></div>
+      </div>
+
+      <!-- ПРАВАЯ КОЛОНКА (5 из 12): ДЕТАЛЬНАЯ СВОДКА ВЫБРАННОГО ДНЯ -->
+      <div class="lg:col-span-5 glass-card rounded-2xl p-4 sm:p-5 border border-indigo-500/25 lg:sticky lg:top-20">
+        <div class="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-white/10">
+          <button onclick="stepSelectedDay(-1)" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 transition" title="Предыдущий день">
+            ←
+          </button>
+          <div class="text-center">
+            <div class="text-[11px] font-mono uppercase tracking-wider text-indigo-400" id="detailDaySubtitle">Сводка по дню</div>
+            <h3 class="text-base sm:text-lg font-extrabold text-white" id="detailDayTitle">26 октября, Пн</h3>
+          </div>
+          <button onclick="stepSelectedDay(1)" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 transition" title="Следующий день">
+            →
+          </button>
+        </div>
+
+        <!-- Быстрая горизонтальная лента дней -->
+        <div id="quickDayStrip" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2.5 mb-3 border-b border-white/10"></div>
+
+        <!-- Содержимое сводки по выбранному дню -->
+        <div id="dayDetailContainer" class="space-y-3"></div>
+      </div>
+
+    </div>
+
+    <!-- БЛОК 3: НИЖНИЕ ВКЛАДКИ -->
+    <section class="glass-card rounded-2xl p-4 sm:p-5">
+      <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-white/10">
+        <div class="flex items-center gap-2">
+          <button onclick="switchBottomTab('exams')" id="tabBtnExams" class="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 text-white transition">
+            🎓 Все зачёты и экзамены (7)
+          </button>
+          <button onclick="switchBottomTab('conflicts')" id="tabBtnConflicts" class="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-white/5 hover:bg-white/10 text-gray-300 transition">
+            ⚠️ Смены 09–09 и накладки (6)
+          </button>
+        </div>
+      </div>
+
+      <div id="bottomTabExams" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+      <div id="bottomTabConflicts" class="hidden grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+    </section>
+
+  </main>
+
+  <!-- МОДАЛЬНОЕ ОКНО: ЦЕНТР ОБНОВЛЕНИЙ -->
+  <div id="syncModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="glass-card w-full max-w-2xl rounded-2xl border border-white/15 p-4 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div>
+          <h3 class="text-base sm:text-lg font-extrabold text-white flex items-center gap-2">
+            🔄 Центр обновления расписания 1Б
+          </h3>
+          <p class="text-xs text-gray-400">Обновляй расписание без пересоздания файла</p>
+        </div>
+        <button onclick="closeSyncModal()" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 flex items-center justify-center text-lg">✕</button>
+      </div>
+
+      <div class="space-y-3">
+        <div class="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-xs text-indigo-200 leading-relaxed">
+          💡 <b>Управление записями:</b> Вставь JSON-патч ниже. Если нужно очистить данные или удалить записи, ключи с пустыми массивами <code>[]</code> или объектами <code>{}</code> перезапишут старые данные в памяти браузера.
+        </div>
+
+        <textarea id="jsonPatchInput" rows="6" placeholder='Пример: {"classes": {}, "exams": [], "notes": {}}' class="w-full rounded-xl bg-gray-950 border border-white/15 p-3 text-xs font-mono text-emerald-300 focus:outline-none focus:border-indigo-500"></textarea>
+
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <button onclick="applyJsonPatch()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-lg">
+              ✅ Применить обновление
+            </button>
+            <button onclick="exportCurrentScheduleJson()" class="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 text-xs font-semibold">
+              📤 Экспорт базы
+            </button>
+          </div>
+          <button onclick="resetToFactorySchedule()" class="px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-semibold">
+            Сбросить к заводским
+          </button>
+        </div>
+      </div>
+
+      <div id="syncStatusMsg" class="hidden p-3 rounded-xl text-xs font-medium"></div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY_CLASSES = 'raspisanie_1b_classes_v3';
+    const STORAGE_KEY_EXAMS   = 'raspisanie_1b_exams_v3';
+    const STORAGE_KEY_NOTES   = 'raspisanie_1b_notes_v3';
+    const STORAGE_KEY_STAMP   = 'raspisanie_1b_updated_stamp_v3';
+
+    const WORK_SHIFTS_24H = ['2026-10-29', '2026-11-02', '2026-11-06', '2026-11-10', '2026-11-14'];
+
+    const DEFAULT_NOTES = {
+      '2026-10-26': [{ label: 'Ресн', color: 'sky' }],
+      '2026-10-27': [{ label: 'Депи', color: 'sky' }],
+      '2026-11-15': [{ label: 'отно', color: 'sky' }]
+    };
+
+    const DEFAULT_EXAMS = [
+      { date: '2026-10-30', time: '12:40', subject: 'Государственная служба', type: 'зач', label: 'Зачёт', teacher: 'доц. Краснобаева Л.А.', room: '302', note: '⏰ Время перенесено на 12:40 (Каб 302)! После смены в 09:00 есть запас.' },
+      { date: '2026-11-03', time: '09:30', subject: 'Финансовое право', type: 'зач', label: 'Зачёт', teacher: 'доц. Пилипенко А.А.', room: 'уточняется', note: '⚠️ В 09:00 заканчивается суточная смена (30 минут на дорогу)!' },
+      { date: '2026-11-06', time: '09:30', subject: 'Хозяйственное право', type: 'экз', label: 'Экзамен', teacher: 'ст. преп. Гавриленко А.В.', room: 'уточняется', note: '🛑 КРИТИЧЕСКАЯ НАКЛАДКА: в 09:00 утра начинается твоя смена!' },
+      { date: '2026-11-09', time: '09:30', subject: 'Организация избирательных кампаний', type: 'зач', label: 'Зачёт', teacher: 'доц. Юсупов П.В.', room: 'уточняется', note: 'Спокойное утро без рабочей смены' },
+      { date: '2026-11-10', time: '08:00', subject: 'Уголовное право', type: 'экз', label: 'Экзамен', teacher: 'доц. Федчук И.Л.', room: 'уточняется', note: '🛑 ЭКСТРИМ: экзамен в 08:00, а в 09:00 старт твоей суточной смены!' },
+      { date: '2026-11-11', time: '11:00', subject: 'Политическая коммуникация', type: 'зач', label: 'Зачёт', teacher: 'доц. Абраменко Е.Г.', room: 'уточняется', note: 'После смены (конец в 09:00) — есть 2 часа запаса' },
+      { date: '2026-11-12', time: '09:30', subject: 'Этнополитология', type: 'экз', label: 'Экзамен', teacher: 'доц. Слуцкая Л.В.', room: 'уточняется', note: 'Спокойное утро без рабочей смены' }
+    ];
+
+    const DEFAULT_CLASSES = {
+      '2026-10-26': [
+        { start: '14:10', end: '15:30', subject: 'Хозяйственное право', control: 'экз', teacher: 'ст.преп. Гавриленко А.В.', room: '406', note: 'С 15:30 до 17:20 окно у 1Б!' },
+        { start: '17:20', end: '18:40', subject: 'Семейное право', control: 'зач', teacher: 'ст.преп. Наумович Т.В.', room: '202' },
+        { start: '18:50', end: '20:10', subject: 'Семейное право', control: 'зач', teacher: 'ст.преп. Наумович Т.В.', room: '202' }
+      ],
+      '2026-10-27': [
+        { start: '14:10', end: '15:50', subject: 'Финансовое право', control: 'зач', teacher: 'доц. Пилипенко А.А.', room: '606' },
+        { start: '15:50', end: '17:20', subject: 'Политическая коммуникация', control: 'зач', teacher: 'доц. Абраменко Е.Г.', room: '605' },
+        { start: '17:20', end: '18:40', subject: 'Семейное право', control: 'зач', teacher: 'ст.преп. Наумович Т.В.', room: '407' },
+        { start: '18:50', end: '20:10', subject: 'Организация избирательных кампаний', control: 'зач', teacher: 'доц. Юсупов П.В.', room: '607' }
+      ],
+      '2026-10-28': [
+        { start: '14:10', end: '15:50', subject: 'Государственная служба', control: 'зач', teacher: 'доц. Краснобаева Л.А.', room: '412' },
+        { start: '15:50', end: '17:20', subject: 'Политическая коммуникация', control: 'зач', teacher: 'доц. Абраменко Е.Г.', room: '406' },
+        { start: '17:20', end: '18:40', subject: 'Теория политики', control: 'зач', teacher: 'доц. Побережная О.Е.', room: '313' }
+      ],
+      '2026-10-29': [
+        { start: '14:10', end: '15:30', subject: 'Этнополитология', control: 'экз', teacher: 'доц. Слуцкая Л.В.', room: '604' },
+        { start: '15:50', end: '17:20', subject: 'Хозяйственное право', control: 'экз', teacher: 'ст.преп. Гавриленко А.В.', room: '508' },
+        { start: '17:20', end: '18:40', subject: 'Теория политики', control: 'зач', teacher: 'доц. Побережная О.Е.', room: '604' },
+        { start: '18:50', end: '20:10', subject: 'Финансовое право', control: 'зач', teacher: 'доц. Пилипенко А.А.', room: '604' }
+      ],
+      '2026-10-30': [
+        { start: '14:10', end: '15:30', subject: 'Финансовое право', control: 'зач', teacher: 'доц. Пилипенко А.А.', room: '604' },
+        { start: '15:50', end: '17:20', subject: 'Теория политики', control: 'зач', teacher: 'доц. Побережная О.Е.', room: '604' },
+        { start: '17:20', end: '18:40', subject: 'Уголовное право', control: 'экз', teacher: 'доц. Федчук И.Л.', room: '202' },
+        { start: '18:50', end: '20:10', subject: 'Уголовное право', control: 'экз', teacher: 'доц. Федчук И.Л.', room: '202' }
+      ],
+      '2026-11-02': [
+        { start: '14:10', end: '15:30', subject: 'Хозяйственное право', control: 'экз', teacher: 'ст.преп. Гавриленко А.В.', room: 'уточняется' },
+        { start: '15:50', end: '17:20', subject: 'Теория политики', control: 'зач', teacher: 'доц. Побережная О.Е.', room: 'уточняется' },
+        { start: '17:20', end: '18:40', subject: 'Организация избирательных кампаний', control: 'зач', teacher: 'доц. Юсупов П.В.', room: 'уточняется' }
+      ],
+      '2026-11-03': [
+        { start: '14:10', end: '15:30', subject: 'Этнополитология', control: 'экз', teacher: 'доц. Слуцкая Л.В.', room: 'уточняется' },
+        { start: '15:50', end: '17:20', subject: 'Политическая коммуникация', control: 'зач', teacher: 'доц. Абраменко Е.Г.', room: 'уточняется' },
+        { start: '17:20', end: '18:40', subject: 'Политика в сфере цифровой трансформации', control: 'зач', teacher: 'доц. Ильина Е.М.', room: 'уточняется' },
+        { start: '18:50', end: '20:10', subject: 'Политика в сфере цифровой трансформации', control: 'зач', teacher: 'доц. Ильина Е.М.', room: 'уточняется' }
+      ],
+      '2026-11-04': [
+        { start: '14:10', end: '15:30', subject: 'Организация избирательных кампаний', control: 'зач', teacher: 'доц. Юсупов П.В.', room: 'уточняется' },
+        { start: '15:50', end: '17:20', subject: 'Семейное право', control: 'зач', teacher: 'ст.преп. Наумович Т.В.', room: 'уточняется' },
+        { start: '17:20', end: '18:40', subject: 'Этнополитология', control: 'экз', teacher: 'доц. Слуцкая Л.В.', room: 'уточняется' },
+        { start: '18:50', end: '20:10', subject: 'Уголовное право', control: 'экз', teacher: 'доц. Федчук И.Л.', room: 'уточняется' }
+      ],
+      '2026-11-05': [
+        { start: '14:10', end: '15:30', subject: 'Право социального обеспечения', control: 'зач', teacher: 'доц. Постовалова Т.А.', room: 'уточняется' },
+        { start: '15:50', end: '17:10', subject: 'Право социального обеспечения', control: 'зач', teacher: 'доц. Постовалова Т.А.', room: 'уточняется' },
+        { start: '18:50', end: '20:10', subject: 'Этнополитология', control: 'экз', teacher: 'доц. Слуцкая Л.В.', room: 'уточняется' }
+      ],
+      '2026-11-06': [
+        { start: '14:10', end: '15:30', subject: 'Право социального обеспечения', control: 'зач', teacher: 'доц. Постовалова Т.А.', room: 'уточняется' },
+        { start: '15:50', end: '17:10', subject: 'Право социального обеспечения', control: 'зач', teacher: 'доц. Постовалова Т.А.', room: 'уточняется' }
+      ],
+      '2026-11-09': [
+        { start: '14:10', end: '15:30', subject: 'Земельное и аграрное право', control: 'зач', teacher: 'доц. Саскевич В.В.', room: 'уточняется' },
+        { start: '15:50', end: '17:10', subject: 'Уголовный процесс', control: 'зач', teacher: 'доц. Долгоруков С.В.', room: 'уточняется' },
+        { start: '17:20', end: '18:40', subject: 'Уголовный процесс', control: 'зач', teacher: 'доц. Долгоруков С.В.', room: 'уточняется' }
+      ],
+      '2026-11-10': [
+        { start: '14:10', end: '15:30', subject: 'Геополитические проблемы в современном мире', control: 'зач', teacher: 'доц. Симановский С.И.', room: 'уточняется' },
+        { start: '15:50', end: '17:10', subject: 'Геополитические проблемы в современном мире', control: 'зач', teacher: 'доц. Симановский С.И.', room: 'уточняется' },
+        { start: '17:20', end: '18:40', subject: 'Политика в сфере цифровой трансформации', control: 'зач', teacher: 'доц. Ильина Е.М.', room: 'уточняется' },
+        { start: '18:50', end: '20:10', subject: 'Политика в сфере цифровой трансформации', control: 'зач', teacher: 'доц. Ильина Е.М.', room: 'уточняется' }
+      ],
+      '2026-11-11': [
+        { start: '14:10', end: '15:30', subject: 'Политические проблемы современной глобалистики', control: 'зач', teacher: 'проф. Круглова Г.А.', room: 'уточняется' },
+        { start: '15:50', end: '17:10', subject: 'Земельное и аграрное право', control: 'зач', teacher: 'доц. Саскевич В.В.', room: 'уточняется' },
+        { start: '17:20', end: '18:40', subject: 'Геополитические проблемы в современном мире', control: 'зач', teacher: 'доц. Симановский С.И.', room: 'уточняется' },
+        { start: '18:50', end: '20:10', subject: 'Геополитические проблемы в современном мире', control: 'зач', teacher: 'доц. Симановский С.И.', room: 'уточняется' }
+      ],
+      '2026-11-12': [
+        { start: '14:10', end: '15:30', subject: 'Политические проблемы современной глобалистики', control: 'зач', teacher: 'проф. Круглова Г.А.', room: 'уточняется' },
+        { start: '15:50', end: '17:10', subject: 'Политические проблемы современной глобалистики', control: 'зач', teacher: 'проф. Круглова Г.А.', room: 'уточняется' },
+        { start: '17:20', end: '18:40', subject: 'Уголовный процесс', control: 'зач', teacher: 'доц. Долгоруков С.В.', room: 'уточняется' },
+        { start: '18:50', end: '20:10', subject: 'Уголовный процесс', control: 'зач', teacher: 'доц. Долгоруков С.В.', room: 'уточняется' }
+      ],
+      '2026-11-13': [
+        { start: '14:10', end: '15:30', subject: 'Земельное и аграрное право', control: 'зач', teacher: 'доц. Саскевич В.В.', room: 'уточняется' },
+        { start: '15:50', end: '17:10', subject: 'Земельное и аграрное право', control: 'зач', teacher: 'доц. Саскевич В.В.', room: 'уточняется' },
+        { start: '17:20', end: '18:40', subject: 'Политика в сфере цифровой трансформации', control: 'зач', teacher: 'доц. Ильина Е.М.', room: 'уточняется' }
+      ]
+    };
+
+    // Загрузка базы с поддержкой полной перезаписи
+    let CLASSES = JSON.parse(localStorage.getItem(STORAGE_KEY_CLASSES)) || JSON.parse(JSON.stringify(DEFAULT_CLASSES));
+    let EXAMS   = JSON.parse(localStorage.getItem(STORAGE_KEY_EXAMS))   || JSON.parse(JSON.stringify(DEFAULT_EXAMS));
+    let PERSONAL_NOTES = JSON.parse(localStorage.getItem(STORAGE_KEY_NOTES)) || JSON.parse(JSON.stringify(DEFAULT_NOTES));
+
+    const SESSION_DATES = [
+      '2026-10-26','2026-10-27','2026-10-28','2026-10-29','2026-10-30','2026-10-31','2026-11-01',
+      '2026-11-02','2026-11-03','2026-11-04','2026-11-05','2026-11-06','2026-11-07','2026-11-08',
+      '2026-11-09','2026-11-10','2026-11-11','2026-11-12','2026-11-13','2026-11-14','2026-11-15'
+    ];
+
+    const DAYS_FULL = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+    const DAYS_SHORT = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+    const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+
+    let simDateObj = null;
+    let selectedIso = '2026-10-26';
+    let plainReportForCopy = '';
+
+    function parseIsoLocal(isoStr) {
+      const [y, m, d] = isoStr.split('-').map(Number);
+      return new Date(y, m - 1, d, 12, 0, 0);
+    }
+
+    function toIsoDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function toRuShortDate(isoStr) {
+      const [y, m, d] = isoStr.split('-');
+      return `${d}.${m}.${y}`;
+    }
+
+    function timeToMin(t) {
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + m;
+    }
+
+    function formatMinDiff(mins) {
+      if (mins <= 0) return 'меньше минуты';
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      if (h > 0 && m > 0) return `${h} ч ${m} мин`;
+      if (h > 0) return `${h} ч`;
+      return `${m} мин`;
+    }
+
+    function getMinskNow() {
+      if (simDateObj) return new Date(simDateObj.getTime());
+      const now = new Date();
+      const utcMs = now.getTime() + (now.getTimezoneOffset() * 60000);
+      return new Date(utcMs + 3 * 3600000);
+    }
+
+    function getShiftStatus(isoStr) {
+      const idx = SESSION_DATES.indexOf(isoStr);
+      const prevIso = idx > 0 ? SESSION_DATES[idx - 1] : null;
+      return {
+        startsAt9: WORK_SHIFTS_24H.includes(isoStr),
+        endsAt9: prevIso ? WORK_SHIFTS_24H.includes(prevIso) : false
+      };
+    }
+
+    function renderAssistantTemplate() {
+      const now = getMinskNow();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      const curTimeStr = `${hh}:${mm}`;
+      const curMin = now.getHours() * 60 + now.getMinutes();
+
+      document.getElementById('liveClock').textContent = `${hh}:${mm}:${ss}`;
+
+      const todayIso = toIsoDate(now);
+      const tmrwObj = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 12, 0, 0);
+      const tmrwIso = toIsoDate(tmrwObj);
+
+      const todayClasses = CLASSES[todayIso] || [];
+      const todayExams = EXAMS.filter(e => e.date === todayIso);
+      const shiftToday = getShiftStatus(todayIso);
+
+      let activeClass = null;
+      let nextClass = null;
+      const remainingClasses = [];
+
+      for (const c of todayClasses) {
+        const sMin = timeToMin(c.start);
+        const eMin = timeToMin(c.end);
+        if (curMin >= sMin && curMin < eMin) {
+          activeClass = c;
+        } else if (curMin < sMin) {
+          if (!nextClass) nextClass = c;
+          remainingClasses.push(c);
+        }
+      }
+
+      let line1 = '';
+      let line2 = '';
+
+      if (activeClass) {
+        const left = timeToMin(activeClass.end) - curMin;
+        line1 = `Сейчас <b>${curTimeStr}</b>, пара закончится через <b>${formatMinDiff(left)}</b> в <b>${activeClass.end.replace(':','.')}</b>`;
+        line2 = `Идёт пара по <b>${activeClass.subject} (${activeClass.control})</b> в Каб <b>${activeClass.room}</b>. Преподаватель <b>${activeClass.teacher}</b>`;
+      } else if (nextClass) {
+        const wait = timeToMin(nextClass.start) - curMin;
+        line1 = `Сейчас <b>${curTimeStr}</b>, идёт перерыв — следующая пара начнётся через <b>${formatMinDiff(wait)}</b> в <b>${nextClass.start.replace(':','.')}</b>`;
+        line2 = `Идёт пара по: Сейчас перерыв. Дисциплина <b>${nextClass.subject} (${nextClass.control})</b> в Каб <b>${nextClass.room}</b>. Преподаватель <b>${nextClass.teacher}</b>`;
+      } else {
+        line1 = `Сейчас <b>${curTimeStr}</b> (${toRuShortDate(todayIso)}, ${DAYS_FULL[now.getDay()]}) — учебные пары на сегодня завершены.`;
+        line2 = `Идёт пара по: Сейчас пар нет — время отдыхать!`;
+      }
+
+      let shiftBanner = '';
+      if (shiftToday.startsAt9) {
+        shiftBanner += `<div class="px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs">🛠️ <b>График смен:</b> Сегодня в <b>09:00</b> началась твоя суточная смена.</div>`;
+      } else if (shiftToday.endsAt9) {
+        shiftBanner += `<div class="px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs">🛠️ <b>График смен:</b> Сегодня в <b>09:00</b> утра завершилась суточная смена.</div>`;
+      }
+
+      let remHtml = '';
+      if (remainingClasses.length > 0) {
+        remHtml = `<ul class="space-y-1 mt-1">` + remainingClasses.map(c =>
+          `<li class="flex items-start gap-2"><span class="text-indigo-400">•</span><span><b>${c.start.replace(':','.')}–${c.end.replace(':','.')}</b> — ${c.subject} <b>(${c.control})</b>, ${c.teacher}, Каб <b>${c.room}</b></span></li>`
+        ).join('') + `</ul>`;
+      } else {
+        remHtml = `<div class="text-gray-400 text-xs mt-0.5">На сегодня больше пар нет.</div>`;
+      }
+
+      const tmrwExams = EXAMS.filter(e => e.date === tmrwIso);
+      const tmrwClasses = CLASSES[tmrwIso] || [];
+
+      let tmrwExamLine = tmrwExams.length > 0
+        ? tmrwExams.map(ex => `<div class="p-2 rounded-lg bg-rose-500/15 border border-rose-500/40 text-rose-200 text-xs font-medium">⚠️ <b>Экзамен/Зачет!</b> <b>${ex.time}</b> — <b>${ex.subject} (${ex.type})</b>, Каб <b>${ex.room}</b>, Преподаватель <b>${ex.teacher}</b>.</div>`).join('')
+        : `<div class="text-xs text-gray-300">⚠️ <b>Экзамен/Зачет! (если есть):</b> Событий контроля на завтра нет.</div>`;
+
+      let tmrwClassesHtml = tmrwClasses.length > 0
+        ? `<ul class="space-y-1 mt-1">` + tmrwClasses.map(c => `<li class="flex items-start gap-2"><span class="text-emerald-400">•</span><span><b>${c.start.replace(':','.')}–${c.end.replace(':','.')}</b> — ${c.subject} <b>(${c.control})</b>, ${c.teacher}, Каб <b>${c.room}</b></span></li>`).join('') + `</ul>`
+        : `<div class="text-gray-400 text-xs mt-0.5">Пар на завтра нет.</div>`;
+
+      document.getElementById('assistantReportBox').innerHTML = `
+        ${shiftBanner}
+        <div>${line1}</div>
+        <div>${line2}</div>
+        <div class="pt-2 border-t border-white/10">
+          <div class="font-bold text-indigo-300 text-xs uppercase tracking-wider">Следующие пары на сегодня (${toRuShortDate(todayIso)}):</div>
+          ${remHtml}
+        </div>
+        <div class="pt-2 border-t border-white/10 space-y-1">
+          <div class="font-bold text-emerald-300 text-xs uppercase tracking-wider">Информация на завтра (${toRuShortDate(tmrwIso)}, ${DAYS_FULL[tmrwObj.getDay()]}):</div>
+          ${tmrwExamLine}
+          ${tmrwClassesHtml}
+        </div>
+      `;
+      plainReportForCopy = document.getElementById('assistantReportBox').innerText;
+    }
+
+    function renderCalendarGrid() {
+      const grid = document.getElementById('calendarGrid');
+      const nowIso = toIsoDate(getMinskNow());
+
+      grid.innerHTML = SESSION_DATES.map(iso => {
+        const dObj = parseIsoLocal(iso);
+        const dayNum = dObj.getDate();
+        const isToday = iso === nowIso;
+        const isSelected = iso === selectedIso;
+
+        const dayClasses = CLASSES[iso] || [];
+        const dayExams = EXAMS.filter(e => e.date === iso);
+        const notes = PERSONAL_NOTES[iso] || [];
+        const shift = getShiftStatus(iso);
+
+        let badges = `<div class="text-[9px] sm:text-[10px] px-1 py-0.5 rounded badge-session font-semibold text-center leading-tight truncate">сессия ВД</div>`;
+
+        if (shift.startsAt9) {
+          badges += `<div class="text-[9px] sm:text-[10px] px-1 py-0.5 rounded badge-work24 font-bold text-center leading-tight truncate">работа 09:00</div>`;
+        } else if (shift.endsAt9) {
+          badges += `<div class="text-[9px] px-1 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 text-center leading-tight truncate">смена до 09:00</div>`;
+        }
+
+        dayExams.forEach(ex => {
+          const cls = ex.type === 'экз' ? 'badge-exam' : 'badge-zach';
+          badges += `<div class="text-[9px] sm:text-[10px] px-1 py-0.5 rounded ${cls} font-bold text-center leading-tight truncate">⚠️ ${ex.type.toUpperCase()} ${ex.time}</div>`;
+        });
+
+        notes.forEach(n => {
+          badges += `<div class="text-[9px] sm:text-[10px] px-1 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 text-center leading-tight truncate">• ${n.label}</div>`;
+        });
+
+        if (dayClasses.length > 0) {
+          const firstStart = dayClasses[0].start.replace(':','.');
+          const lastEnd = dayClasses[dayClasses.length - 1].end.replace(':','.');
+          badges += `<div class="text-[9px] sm:text-[10px] px-1 py-0.5 rounded bg-indigo-500/20 text-indigo-200 border border-indigo-500/30 text-center font-mono leading-tight truncate">${dayClasses.length} п: ${firstStart}-${lastEnd}</div>`;
+        }
+
+        return `
+          <button onclick="selectDay('${iso}')" class="text-left rounded-xl p-1.5 sm:p-2 min-h-[104px] sm:min-h-[118px] flex flex-col justify-between transition border border-white/10 bg-gray-900/60 hover:bg-gray-800/80 ${isSelected ? 'day-selected' : ''} ${isToday ? 'ring-1 ring-emerald-400' : ''}">
+            <div class="flex items-center justify-between w-full mb-1">
+              <span class="text-xs sm:text-sm font-extrabold ${isSelected ? 'text-indigo-300' : 'text-white'}">
+                ${dayNum}
+              </span>
+              ${isToday ? '<span class="w-2 h-2 rounded-full bg-emerald-400"></span>' : ''}
+            </div>
+            <div class="space-y-1 w-full">${badges}</div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function renderQuickDayStrip() {
+      const strip = document.getElementById('quickDayStrip');
+      strip.innerHTML = SESSION_DATES.map(iso => {
+        const dObj = parseIsoLocal(iso);
+        const dayNum = dObj.getDate();
+        const dow = DAYS_SHORT[dObj.getDay()];
+        const isSel = iso === selectedIso;
+        const hasExam = EXAMS.some(e => e.date === iso);
+
+        return `
+          <button onclick="selectDay('${iso}')" class="shrink-0 px-2.5 py-1.5 rounded-xl border text-center transition ${isSel ? 'bg-indigo-600 text-white border-indigo-400 font-bold' : 'bg-gray-900/80 text-gray-300 border-white/10 hover:bg-gray-800'}">
+            <div class="text-[10px] opacity-80">${dow}</div>
+            <div class="text-xs font-mono flex items-center justify-center gap-0.5">
+              ${dayNum}
+              ${hasExam ? '<span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>' : ''}
+            </div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function renderSelectedDaySummary() {
+      const dObj = parseIsoLocal(selectedIso);
+      const dayNum = dObj.getDate();
+      const monthName = MONTHS_GEN[dObj.getMonth()];
+      const dowFull = DAYS_FULL[dObj.getDay()];
+
+      document.getElementById('detailDaySubtitle').textContent = `Детальная сводка • ${toRuShortDate(selectedIso)}`;
+      document.getElementById('detailDayTitle').textContent = `${dayNum} ${monthName}, ${dowFull}`;
+
+      const dayClasses = CLASSES[selectedIso] || [];
+      const dayExams = EXAMS.filter(e => e.date === selectedIso);
+      const shift = getShiftStatus(selectedIso);
+      const notes = PERSONAL_NOTES[selectedIso] || [];
+
+      let html = `
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="p-2 rounded-xl bg-gray-900/90 border border-white/10">
+            <div class="text-[10px] text-gray-400 uppercase">Пар за день</div>
+            <div class="text-sm font-extrabold text-indigo-300 mt-0.5">${dayClasses.length}</div>
+          </div>
+          <div class="p-2 rounded-xl bg-gray-900/90 border border-white/10">
+            <div class="text-[10px] text-gray-400 uppercase">Контроль</div>
+            <div class="text-sm font-extrabold ${dayExams.length ? 'text-rose-400' : 'text-emerald-400'} mt-0.5">
+              ${dayExams.length ? dayExams[0].label : 'Нет'}
+            </div>
+          </div>
+          <div class="p-2 rounded-xl bg-gray-900/90 border border-white/10">
+            <div class="text-[10px] text-gray-400 uppercase">Смена 09–09</div>
+            <div class="text-xs font-bold text-amber-300 mt-1">
+              ${shift.startsAt9 ? 'Старт 09:00' : (shift.endsAt9 ? 'Конец 09:00' : 'Выходной')}
+            </div>
+          </div>
+        </div>
+      `;
+
+      notes.forEach(n => {
+        html += `<div class="px-3 py-2 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-200 text-xs font-medium">📌 Заметка: <b>${n.label}</b></div>`;
+      });
+
+      if (shift.startsAt9 || shift.endsAt9) {
+        html += `
+          <div class="p-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-200 text-xs space-y-1">
+            <div class="font-bold">🛠️ Суточная рабочая смена (09:00 – 09:00)</div>
+            <div>${shift.startsAt9 ? 'Заступаешь на смену в <b>09:00 утра</b>.' : 'Смена заканчивается в <b>09:00 утра</b>.'}</div>
+          </div>
+        `;
+      }
+
+      if (dayExams.length > 0) {
+        dayExams.forEach(ex => {
+          html += `
+            <div class="p-3.5 rounded-xl ${ex.type === 'экз' ? 'badge-exam' : 'badge-zach'} space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-mono uppercase font-extrabold px-2 py-0.5 rounded bg-black/30">⚠️ ${ex.label} (${ex.type})</span>
+                <span class="font-mono text-sm font-extrabold">⏰ ${ex.time}</span>
+              </div>
+              <div class="font-bold text-sm text-white pt-0.5">${ex.subject}</div>
+              <div class="text-xs opacity-90">Преподаватель: <b>${ex.teacher}</b> • Каб: <b>${ex.room}</b></div>
+              <div class="text-[11px] pt-1 text-amber-200 font-medium">${ex.note}</div>
+            </div>
+          `;
+        });
+      }
+
+      if (dayClasses.length > 0) {
+        html += `<div class="space-y-2"><div class="text-xs font-bold uppercase tracking-wider text-gray-400">Расписание пар (${dayClasses.length}):</div>`;
+        dayClasses.forEach((c, idx) => {
+          html += `
+            <div class="p-3 rounded-xl bg-gray-900/90 border border-white/10">
+              <div class="flex items-center justify-between gap-2 mb-1">
+                <span class="font-mono text-xs font-bold text-indigo-300">${idx + 1}-я пара • ${c.start.replace(':','.')}–${c.end.replace(':','.')}</span>
+                <span class="text-xs font-mono font-bold text-emerald-300">Каб ${c.room}</span>
+              </div>
+              <div class="font-bold text-sm text-white">${c.subject} <span class="text-[10px]">(${c.control})</span></div>
+              <div class="text-xs text-gray-400 mt-1">👨‍🏫 ${c.teacher}</div>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      } else {
+        html += `<div class="p-5 rounded-xl bg-gray-900/60 border border-white/5 text-center text-xs text-gray-400">Учебных пар в этот день нет</div>`;
+      }
+
+      document.getElementById('dayDetailContainer').innerHTML = html;
+    }
+
+    function renderBottomSections() {
+      document.getElementById('bottomTabExams').innerHTML = EXAMS.map(ex => `
+        <div onclick="selectDay('${ex.date}')" class="cursor-pointer p-3.5 rounded-xl bg-gray-900/80 border border-white/10 transition">
+          <div class="flex items-center justify-between gap-2 mb-1.5">
+            <span class="font-mono text-xs font-bold text-white bg-white/10 px-2 py-0.5 rounded">${toRuShortDate(ex.date)} • ${ex.time}</span>
+            <span class="text-[11px] font-bold uppercase px-2 py-0.5 rounded ${ex.type === 'экз' ? 'badge-exam' : 'badge-zach'}">${ex.label}</span>
+          </div>
+          <div class="font-bold text-sm text-white">${ex.subject}</div>
+          <div class="text-xs text-gray-400 mt-0.5">${ex.teacher}</div>
+        </div>
+      `).join('');
+    }
+
+    function openSyncModal() {
+      document.getElementById('syncModal').classList.remove('hidden');
+    }
+
+    function closeSyncModal() {
+      document.getElementById('syncModal').classList.add('hidden');
+      document.getElementById('syncStatusMsg').classList.add('hidden');
+    }
+
+    function showSyncMessage(text, isError = false) {
+      const box = document.getElementById('syncStatusMsg');
+      box.classList.remove('hidden');
+      box.className = `p-3 rounded-xl text-xs font-medium ${isError ? 'bg-rose-500/20 text-rose-200 border border-rose-500/40' : 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/40'}`;
+      box.innerHTML = text;
+    }
+
+    // ИСПРАВЛЕННЫЙ ПАТЧ С ПОЛНЫМ СБРОСОМ И ПЕРЕЗАПИСЬЮ КЕША
+    function applyJsonPatch() {
+      const raw = document.getElementById('jsonPatchInput').value.trim();
+      if (!raw) {
+        showSyncMessage('⚠️ Вставь JSON-код.', true);
+        return;
+      }
+      try {
+        const parsed = JSON.parse(raw);
+
+        // Если в патче переданы классы, применяем с полной перезаписью или слиянием
+        if (parsed.classes) {
+          CLASSES = parsed.classes;
+          localStorage.setItem(STORAGE_KEY_CLASSES, JSON.stringify(CLASSES));
+        }
+        if (parsed.exams) {
+          EXAMS = parsed.exams;
+          localStorage.setItem(STORAGE_KEY_EXAMS, JSON.stringify(EXAMS));
+        }
+        if (parsed.notes) {
+          PERSONAL_NOTES = parsed.notes;
+          localStorage.setItem(STORAGE_KEY_NOTES, JSON.stringify(PERSONAL_NOTES));
+        }
+
+        // Если передан флаг полной очистки
+        if (parsed.clearAll) {
+          localStorage.clear();
+          CLASSES = JSON.parse(JSON.stringify(DEFAULT_CLASSES));
+          EXAMS = JSON.parse(JSON.stringify(DEFAULT_EXAMS));
+          PERSONAL_NOTES = JSON.parse(JSON.stringify(DEFAULT_NOTES));
+        }
+
+        const stamp = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        localStorage.setItem(STORAGE_KEY_STAMP, `Обновлено ${stamp}`);
+        
+        refreshAllViews();
+        showSyncMessage('✅ Успешно! Все старые записи сброшены, новые данные применены.');
+      } catch (e) {
+        showSyncMessage('❌ Ошибка синтаксиса JSON.', true);
+      }
+    }
+
+    function exportCurrentScheduleJson() {
+      const exportObj = { classes: CLASSES, exams: EXAMS, notes: PERSONAL_NOTES };
+      const dataStr = JSON.stringify(exportObj, null, 2);
+      document.getElementById('jsonPatchInput').value = dataStr;
+      navigator.clipboard.writeText(dataStr);
+      showSyncMessage('📋 База скопирована в буфер обмена!');
+    }
+
+    function resetToFactorySchedule() {
+      localStorage.removeItem(STORAGE_KEY_CLASSES);
+      localStorage.removeItem(STORAGE_KEY_EXAMS);
+      localStorage.removeItem(STORAGE_KEY_NOTES);
+      localStorage.removeItem(STORAGE_KEY_STAMP);
+      CLASSES = JSON.parse(JSON.stringify(DEFAULT_CLASSES));
+      EXAMS = JSON.parse(JSON.stringify(DEFAULT_EXAMS));
+      PERSONAL_NOTES = JSON.parse(JSON.stringify(DEFAULT_NOTES));
+      refreshAllViews();
+      showSyncMessage('🔄 Полный сброс выполнен. Данные возвращены к исходным.');
+    }
+
+    function selectDay(iso) {
+      if (!SESSION_DATES.includes(iso)) return;
+      selectedIso = iso;
+      renderCalendarGrid();
+      renderQuickDayStrip();
+      renderSelectedDaySummary();
+    }
+
+    function stepSelectedDay(delta) {
+      const idx = SESSION_DATES.indexOf(selectedIso);
+      const nextIdx = idx + delta;
+      if (nextIdx >= 0 && nextIdx < SESSION_DATES.length) {
+        selectDay(SESSION_DATES[nextIdx]);
+      }
+    }
+
+    function selectToday() {
+      const nowIso = toIsoDate(getMinskNow());
+      if (SESSION_DATES.includes(nowIso)) selectDay(nowIso);
+      else selectDay('2026-10-26');
+    }
+
+    function switchBottomTab(tab) {
+      const isExams = tab === 'exams';
+      document.getElementById('bottomTabExams').classList.toggle('hidden', !isExams);
+      document.getElementById('bottomTabConflicts').classList.toggle('hidden', isExams);
+    }
+
+    function toggleTimeMachine() {
+      document.getElementById('timeMachineDrawer').classList.toggle('hidden');
+    }
+
+    function setSim(isoDateTime) {
+      simDateObj = new Date(isoDateTime);
+      refreshAllViews();
+    }
+
+    function resetSim() {
+      simDateObj = null;
+      selectToday();
+      refreshAllViews();
+    }
+
+    function copyTemplateText() {
+      navigator.clipboard.writeText(plainReportForCopy);
+    }
+
+    function refreshAllViews() {
+      renderAssistantTemplate();
+      renderCalendarGrid();
+      renderQuickDayStrip();
+      renderSelectedDaySummary();
+      renderBottomSections();
+    }
+
+    selectToday();
+    refreshAllViews();
+    setInterval(renderAssistantTemplate, 1000);
+  </script>
+</body>
+</html>
