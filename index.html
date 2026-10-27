@@ -1619,66 +1619,38 @@
       input.type = input.type === 'password' ? 'text' : 'password';
     }
 
-    async function discoverAvailableGeminiModels(apiKey) {
-      const defaultOrder = [
+        async function discoverAvailableGeminiModels(apiKey) {
+      const freeTierPriorities = [
         'gemini-2.5-flash',
-        'gemini-2.5-flash-lite',
         'gemini-2.0-flash',
-        'gemini-2.0-flash-lite',
-        'gemini-2.5-pro',
-        'gemini-flash-latest'
+        'gemini-1.5-flash',
+        'gemini-2.5-flash-lite',
+        'gemini-2.0-flash-lite'
       ];
 
       try {
         const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`);
         const data = await resp.json();
 
-        if (!resp.ok || data.error) {
-          const msg = data?.error?.message || `HTTP ${resp.status}`;
-          if (msg.includes('API key not valid') || data?.error?.status === 'INVALID_ARGUMENT') {
-            throw new Error('API_KEY_INVALID: Ключ недействителен. Проверь правильность ключа на aistudio.google.com/apikey');
-          }
-          return defaultOrder;
-        }
-
-        if (Array.isArray(data.models)) {
-                    const supported = data.models
-            .filter(m =>
-              Array.isArray(m.supportedGenerationMethods) &&
-              m.supportedGenerationMethods.includes('generateContent') &&
-              m.name.includes('gemini') &&
-              m.name.includes('flash') &&
-              !m.name.includes('computer-use') &&
-              !m.name.includes('embedding') &&
-              !m.name.includes('imagen') &&
-              !m.name.includes('tts') &&
-              !m.name.includes('veo')
-            )
-            .map(m => m.name.replace(/^models\//, ''));
-
-
-          if (supported.length > 0) {
-            supported.sort((a, b) => {
-              const score = (name) => {
-                if (name === 'gemini-2.5-flash') return 100;
-                if (name.includes('2.5-flash-lite')) return 95;
-                if (name.includes('2.5-flash')) return 90;
-                if (name.includes('flash-latest')) return 85;
-                if (name.includes('2.0-flash')) return 80;
-                if (name.includes('flash')) return 70;
-                if (name.includes('pro')) return 60;
-                return 10;
-              };
-              return score(b) - score(a);
-            });
-            return supported;
+        if (resp.ok && Array.isArray(data.models)) {
+          const valid = data.models
+            .map(m => (m.name || '').replace(/^models\//, ''))
+            .filter(name => 
+              name.startsWith('gemini') && 
+              name.includes('flash') && 
+              !name.includes('computer-use') && 
+              !name.includes('preview') && 
+              !name.includes('exp')
+            );
+          if (valid.length > 0) {
+            // Place our primary free models first
+            const combined = [...new Set([...freeTierPriorities.filter(m => valid.includes(m)), ...valid, ...freeTierPriorities])];
+            return combined;
           }
         }
-      } catch (e) {
-        if (e.message.includes('API_KEY_INVALID')) throw e;
-      }
+      } catch (e) {}
 
-      return defaultOrder;
+      return freeTierPriorities;
     }
 
     async function callGeminiWithFallback(apiKey, contentsPayload, useJsonConfig = true) {
