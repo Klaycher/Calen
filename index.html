@@ -1619,12 +1619,12 @@
       input.type = input.type === 'password' ? 'text' : 'password';
     }
 
-            async function discoverAvailableGeminiModels(apiKey) {
-      const freeTierPriorities = [
+                async function discoverAvailableGeminiModels(apiKey) {
+      // Базовые модели для генерации текста и фото
+      const defaultModels = [
         'gemini-3.5-flash-lite',
         'gemini-3.6-flash',
         'gemini-3.8-flash',
-        'gemini-3.1-flash-lite',
         'gemini-flash-latest'
       ];
 
@@ -1634,25 +1634,36 @@
 
         if (resp.ok && Array.isArray(data.models)) {
           const valid = data.models
-            .map(m => (m.name || '').replace(/^models\//, ''))
-            .filter(name => 
-              name.startsWith('gemini') && 
-              name.includes('flash') && 
-              !name.includes('computer-use') && 
-              !name.includes('preview') && 
-              !name.includes('exp') &&
-              !name.includes('2.0') &&
-              !name.includes('2.5') &&
-              !name.includes('1.5')
-            );
+            .filter(m => {
+              const name = (m.name || '').toLowerCase();
+              const methods = m.supportedGenerationMethods || [];
+              return (
+                methods.includes('generateContent') &&
+                name.includes('gemini') &&
+                name.includes('flash') &&
+                !name.includes('tts') &&
+                !name.includes('audio') &&
+                !name.includes('computer-use') &&
+                !name.includes('embedding') &&
+                !name.includes('imagen') &&
+                !name.includes('preview') &&
+                !name.includes('exp') &&
+                !name.includes('2.0') &&
+                !name.includes('2.5') &&
+                !name.includes('1.5')
+              );
+            })
+            .map(m => m.name.replace(/^models\//, ''));
+
           if (valid.length > 0) {
-            const combined = [...new Set([...freeTierPriorities.filter(m => valid.includes(m)), ...valid, ...freeTierPriorities])];
-            return combined;
+            // Приоритет проверенным легковесным моделям
+            const ordered = [...new Set([...defaultModels.filter(m => valid.includes(m)), ...valid])];
+            return ordered;
           }
         }
       } catch (e) {}
 
-      return freeTierPriorities;
+      return defaultModels;
     }
 
     async function callGeminiWithFallback(apiKey, contentsPayload, useJsonConfig = true) {
