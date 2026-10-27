@@ -1782,18 +1782,30 @@
         let updatedDays = 0;
 
         const classesPatch = parsed.classes !== undefined ? parsed.classes : parsed;
+        const patchDetails = [];
         for (const [dateKey, dayArr] of Object.entries(classesPatch)) {
           if (/^\d{4}-\d{2}-\d{2}$/.test(dateKey) && Array.isArray(dayArr)) {
             CLASSES[dateKey] = [...dayArr];
             updatedDays++;
+            const dayPairs = dayArr.map(p => `${p.start || ''}–${p.end || ''} ${p.subject || 'Предмет'} (Каб ${p.room || '?'})`).join(', ');
+            patchDetails.push(`📅 <b>${toRuShortDate(dateKey)}:</b> ${dayPairs || 'пар нет'}`);
           }
         }
 
-        if (Array.isArray(parsed.exams)) EXAMS = [...parsed.exams];
-        if (Array.isArray(parsed.shifts)) WORK_SHIFTS_24H = [...parsed.shifts];
-        if (parsed.notes && typeof parsed.notes === 'object') PERSONAL_NOTES = { ...parsed.notes };
+        if (Array.isArray(parsed.exams)) {
+          EXAMS = [...parsed.exams];
+          patchDetails.push(`🎓 <b>Зачёты/экзамены:</b> ${EXAMS.length} записей`);
+        }
+        if (Array.isArray(parsed.shifts)) {
+          WORK_SHIFTS_24H = [...parsed.shifts];
+          patchDetails.push(`🛠️ <b>Смены 09–09:</b> ${WORK_SHIFTS_24H.map(toRuShortDate).join(', ')}`);
+        }
+        if (parsed.notes && typeof parsed.notes === 'object') {
+          PERSONAL_NOTES = { ...parsed.notes };
+        }
 
-        logCalendarChange('Импорт JSON', `Обновлено дней: ${updatedDays}`);
+        const patchLogMsg = `<b>Обновлено дней: ${updatedDays}</b><br>` + patchDetails.join('<br>');
+        logCalendarChange('Импорт JSON', patchLogMsg);
         saveAllToStorage('Импорт');
         refreshAllViews();
         showSyncMessage(`✅ Успешно обновлено дней: <b>${updatedDays}</b>! Живая сводка и календарь пересчитаны.`);
@@ -1885,14 +1897,19 @@
         const parsed = JSON.parse(jsonMatch[0]);
         const classesPatch = parsed.classes || parsed;
         let count = 0;
+        const detailsList = [];
+
         for (const [k, v] of Object.entries(classesPatch)) {
           if (/^\d{4}-\d{2}-\d{2}$/.test(k) && Array.isArray(v)) {
             CLASSES[k] = v;
             count++;
+            const dayPairs = v.map(p => `${p.start || ''}–${p.end || ''} ${p.subject || 'Предмет'} (Каб ${p.room || '?'})`).join(', ');
+            detailsList.push(`📅 <b>${toRuShortDate(k)}:</b> ${dayPairs || 'пар нет'}`);
           }
         }
 
-        logCalendarChange('AI-сканер фото', `Распознано дней: ${count} (${result.modelName})`);
+        const logMsg = `<b>Обновлено дней: ${count}</b> (${result.modelName})<br>` + detailsList.join('<br>');
+        logCalendarChange('AI-сканер фото', logMsg);
         saveAllToStorage('AI-фото');
         refreshAllViews();
         showSyncMessage(`🎉 Готово (${result.modelName})! Обновлено учебных дней в календаре: <b>${count}</b>.`);
