@@ -3131,14 +3131,42 @@
       return { updatedClassDays, updatedExamsCount, detailsList, summaryHeader };
     }
 
-    // Авто-восстановление базы: возвращает затёртые дневные пары и подтягивает распознанные кабинеты экзаменов из логов!
+    function isClassDeletedInChangelog(dateIso, subject, startTime) {
+      if (!Array.isArray(CALENDAR_CHANGELOG) || CALENDAR_CHANGELOG.length === 0) return false;
+      const ruDate = toRuShortDate(dateIso);
+      return CALENDAR_CHANGELOG.some(entry => {
+        if (!entry || !entry.action || !entry.detail) return false;
+        if (!entry.action.toLowerCase().includes('удален')) return false;
+        const det = String(entry.detail);
+        if (!det.includes(ruDate)) return false;
+        if (subject && subjectsMatch(det, subject)) return true;
+        if (startTime && det.includes(startTime)) return true;
+        return false;
+      });
+    }
+
+    function isExamDeletedInChangelog(dateIso, subject) {
+      if (!Array.isArray(CALENDAR_CHANGELOG) || CALENDAR_CHANGELOG.length === 0) return false;
+      const ruDate = toRuShortDate(dateIso);
+      return CALENDAR_CHANGELOG.some(entry => {
+        if (!entry || !entry.action || !entry.detail) return false;
+        if (!entry.action.toLowerCase().includes('удален')) return false;
+        const det = String(entry.detail);
+        if (dateIso && !det.includes(ruDate)) return false;
+        if (subject && subjectsMatch(det, subject)) return true;
+        return false;
+      });
+    }
+
+    // Авто-восстановление базы: возвращает случайно потерянные пары при сбое сканера и подтягивает распознанные кабинеты из логов.
+    // ВАЖНО: Никогда не восстанавливает намеренно удалённые администратором пары/экзамены!
     function healScheduleAndExamsFromLogs() {
       let healed = false;
       let restoredClassDays = 0;
       let recoveredExamRooms = 0;
       let recoveredClassRooms = 0;
 
-      // 1. Гарантируем наличие всех 7 экзаменов/зачётов сессии в EXAMS
+      // 1. Проверяем EXAMS: восстанавливаем только если список пуст или экзамен потерян без лога удаления
       if (!Array.isArray(EXAMS) || EXAMS.length === 0) {
         EXAMS = JSON.parse(JSON.stringify(BASELINE_EXAMS_1B));
         healed = true;
@@ -3146,13 +3174,15 @@
         BASELINE_EXAMS_1B.forEach(baseEx => {
           const exists = EXAMS.some(e => e.date === baseEx.date && subjectsMatch(e.subject, baseEx.subject));
           if (!exists) {
-            EXAMS.push(JSON.parse(JSON.stringify(baseEx)));
-            healed = true;
+            if (!isExamDeletedInChangelog(baseEx.date, baseEx.subject)) {
+              EXAMS.push(JSON.parse(JSON.stringify(baseEx)));
+              healed = true;
+            }
           }
         });
       }
 
-      // 2. Проверяем CLASSES на случайно записанные туда утренние экзамены и восстанавливаем затёртые пары
+      // 2. Проверяем CLASSES на случайно записанные туда утренние экзамены и восстанавливаем затёртые дни
       if (!CLASSES || typeof CLASSES !== 'object') {
         CLASSES = JSON.parse(JSON.stringify(BASELINE_CLASSES_1B));
         healed = true;
@@ -3173,23 +3203,20 @@
           }
         }
 
-        // Если в этот учебный день пары были затёрты (осталось меньше пар, чем в базовом расписании) — восстанавливаем!
-        if (validAfternoon.length < baseArr.length) {
-          const restoredDay = baseArr.map(baseCls => {
-            const matchInValid = validAfternoon.find(
-              v => normalizeTimeToken(v.start) === baseCls.start || subjectsMatch(v.subject, baseCls.subject)
-            );
-            const roomToKeep = (matchInValid && isValidRoomValue(matchInValid.room))
-              ? cleanRoomString(matchInValid.room)
-              : baseCls.room;
-            return {
-              ...baseCls,
-              room: roomToKeep
-            };
-          });
-          CLASSES[dateIso] = restoredDay;
-          restoredClassDays++;
-          healed = true;
+        // Защита от воскрешения удалённых пар:
+        // Восстанавливаем день из baseline ТОЛЬКО если день был полностью стёрт (validAfternoon.length === 0),
+        // и эти пары НЕ были намеренно удалены администратором в журнале изменений!
+        // Если же в дне есть хотя бы 1 пара (validAfternoon.length > 0), намеренные удаления не отменяются!
+        if (validAfternoon.length === 0 && baseArr.length > 0) {
+          const survivingBase = baseArr.filter(baseCls => !isClassDeletedInChangelog(dateIso, baseCls.subject, baseCls.start));
+          if (survivingBase.length > 0) {
+            CLASSES[dateIso] = JSON.parse(JSON.stringify(survivingBase));
+            restoredClassDays++;
+            healed = true;
+          } else if (currentArr.length > 0) {
+            CLASSES[dateIso] = [];
+            healed = true;
+          }
         } else if (validAfternoon.length !== currentArr.length) {
           CLASSES[dateIso] = validAfternoon;
           healed = true;
@@ -3208,6 +3235,7 @@
 
         for (const entry of chronologicalLogs) {
           if (!entry || !entry.detail) continue;
+          if (entry.action && entry.action.toLowerCase().includes('удален')) continue; // Не подтягиваем кабинеты для удалений!
           const lines = String(entry.detail).split(/<br\s*\/?>/i);
 
           // Сначала соберём все распарсенные строки этой записи лога
@@ -3220,7 +3248,7 @@
               const tStr = normalizeTimeToken(exMatch[4] || '');
               const subjStr = exMatch[5].trim();
               const roomStr = cleanRoomString(exMatch[6]);
-              if (isValidRoomValue(roomStr)) {
+              if (isValidRoomValue(roomStr) && !isExamDeletedInChangelog(iso, subjStr)) {
                 const res = upsertExamRecord({ date: iso, time: tStr, subject: subjStr, room: roomStr });
                 if (res.updated) {
                   recoveredExamRooms++;
@@ -3262,15 +3290,17 @@
             for (const it of pl.items) {
               if (!isValidRoomValue(it.room)) continue;
               if (isWholeEntryExamScan || isLikelyExamItem(it, pl.iso, pl.items.length)) {
-                const res = upsertExamRecord({
-                  date: pl.iso,
-                  time: it.start,
-                  subject: it.subject,
-                  room: it.room
-                });
-                if (res.updated) {
-                  recoveredExamRooms++;
-                  healed = true;
+                if (!isExamDeletedInChangelog(pl.iso, it.subject)) {
+                  const res = upsertExamRecord({
+                    date: pl.iso,
+                    time: it.start,
+                    subject: it.subject,
+                    room: it.room
+                  });
+                  if (res.updated) {
+                    recoveredExamRooms++;
+                    healed = true;
+                  }
                 }
               } else {
                 // Это обычная дневная пара — если в CLASSES[pl.iso] сейчас стоит «уточняется», восстанавливаем кабинет из лога!
