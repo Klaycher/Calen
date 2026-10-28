@@ -73,7 +73,7 @@
           <div class="flex items-center gap-1.5 flex-wrap">
             <h1 class="font-bold text-xs sm:text-base tracking-tight text-white truncate">Расписание • Политология</h1>
             <span id="storageStatusBadge" class="text-[9px] sm:text-[10px] font-mono uppercase px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shrink-0">
-              Стенд 26.10
+              schedule.json
             </span>
           </div>
           <p id="headerSubtext" class="text-[10px] sm:text-[11px] text-gray-400 truncate">Минск (UTC+3) • Сессия группы 1Б</p>
@@ -789,109 +789,25 @@
     const STORAGE_KEY_STAMP   = 'raspisanie_1b_updated_stamp';
     const STORAGE_KEY_API     = 'raspisanie_1b_gemini_key';
 
-    const DEFAULT_WORK_SHIFTS_24H = ['2026-10-29', '2026-11-02', '2026-11-06', '2026-11-10', '2026-11-14'];
+    // Пустые значения по умолчанию: все данные расписания читаются из файла schedule.json на GitHub
+    const DEFAULT_WORK_SHIFTS_24H = [];
+    const DEFAULT_PERSONAL_NOTES  = {};
+    const DEFAULT_EXAMS           = [];
+    const DEFAULT_CLASSES         = {};
 
-    const DEFAULT_PERSONAL_NOTES = {
-      '2026-10-26': [{ label: 'Ресн', color: 'sky' }],
-      '2026-10-27': [{ label: 'Депи', color: 'sky' }],
-      '2026-10-30': [{ label: '🏆 КОНКУРС (весь день)', color: 'contest' }],
-      '2026-11-15': [{ label: 'отно', color: 'sky' }]
-    };
-
-    const DEFAULT_EXAMS = [
-      { date: '2026-10-30', time: '09:30', subject: 'Государственная служба', type: 'зач', label: 'Зачёт', teacher: 'доц. Краснобаева Л.А.', room: 'уточняется', note: '⚠️ В 09:00 конец твоей смены + весь день участие в КОНКУРСЕ!' },
-      { date: '2026-11-03', time: '09:30', subject: 'Финансовое право', type: 'зач', label: 'Зачёт', teacher: 'доц. Пилипенко А.А.', room: 'уточняется', note: '⚠️ В 09:00 заканчивается суточная смена (30 минут на дорогу)!' },
-      { date: '2026-11-06', time: '09:30', subject: 'Хозяйственное право', type: 'экз', label: 'Экзамен', teacher: 'ст. преп. Гавриленко А.В.', room: 'уточняется', note: '🛑 КРИТИЧЕСКАЯ НАКЛАДКА: в 09:00 утра начинается твоя смена!' },
-      { date: '2026-11-09', time: '09:30', subject: 'Организация избирательных кампаний', type: 'зач', label: 'Зачёт', teacher: 'доц. Юсупов П.В.', room: 'уточняется', note: 'Спокойное утро без рабочей смены' },
-      { date: '2026-11-10', time: '08:00', subject: 'Уголовное право', type: 'экз', label: 'Экзамен', teacher: 'доц. Федчук И.Л.', room: 'уточняется', note: '🛑 ЭКСТРИМ: экзамен в 08:00, а в 09:00 старт твоей суточной смены!' },
-      { date: '2026-11-11', time: '11:00', subject: 'Политическая коммуникация', type: 'зач', label: 'Зачёт', teacher: 'доц. Абраменко Е.Г.', room: 'уточняется', note: 'После смены (конец в 09:00) — есть 2 часа запаса' },
-      { date: '2026-11-12', time: '09:30', subject: 'Этнополитология', type: 'экз', label: 'Экзамен', teacher: 'доц. Слуцкая Л.В.', room: 'уточняется', note: 'Спокойное утро без рабочей смены' }
-    ];
-
-    const DEFAULT_CLASSES = {
-      '2026-10-26': [
-        { start: '14:10', end: '15:30', subject: 'Хозяйственное право', control: 'экз', teacher: 'ст.преп. Гавриленко А.В.', room: '406', note: 'С 15:30 до 17:20 окно у 1Б!' },
-        { start: '17:20', end: '18:40', subject: 'Семейное право', control: 'зач', teacher: 'ст.преп. Наумович Т.В.', room: '202' },
-        { start: '18:50', end: '20:10', subject: 'Семейное право', control: 'зач', teacher: 'ст.преп. Наумович Т.В.', room: '202' }
-      ],
-      '2026-10-27': [
-        { start: '14:10', end: '15:30', subject: 'Финансовое право', control: 'зач', teacher: 'доц. Пилипенко А.А.', room: '606' },
-        { start: '15:50', end: '17:20', subject: 'Политическая коммуникация', control: 'зач', teacher: 'доц. Абраменко Е.Г.', room: '605' },
-        { start: '17:20', end: '18:40', subject: 'Семейное право', control: 'зач', teacher: 'ст.преп. Наумович Т.В.', room: '407' },
-        { start: '18:50', end: '20:10', subject: 'Организация избирательных кампаний', control: 'зач', teacher: 'доц. Юсупов П.В.', room: '607' }
-      ],
-      '2026-10-28': [
-        { start: '14:10', end: '15:30', subject: 'Государственная служба', control: 'зач', teacher: 'доц. Краснобаева Л.А.', room: '412' },
-        { start: '15:50', end: '17:20', subject: 'Политическая коммуникация', control: 'зач', teacher: 'доц. Абраменко Е.Г.', room: '406' },
-        { start: '17:20', end: '18:40', subject: 'Теория политики', control: 'зач', teacher: 'доц. Побережная О.Е.', room: '313' }
-      ],
-      '2026-10-29': [
-        { start: '14:10', end: '15:30', subject: 'Этнополитология', control: 'экз', teacher: 'доц. Слуцкая Л.В.', room: '604' },
-        { start: '15:50', end: '17:20', subject: 'Хозяйственное право', control: 'экз', teacher: 'ст.преп. Гавриленко А.В.', room: '508' },
-        { start: '17:20', end: '18:40', subject: 'Теория политики', control: 'зач', teacher: 'доц. Побережная О.Е.', room: '604' },
-        { start: '18:50', end: '20:10', subject: 'Финансовое право', control: 'зач', teacher: 'доц. Пилипенко А.А.', room: '604' }
-      ],
-      '2026-10-30': [
-        { start: '14:10', end: '15:30', subject: 'Финансовое право', control: 'зач', teacher: 'доц. Пилипенко А.А.', room: '604' },
-        { start: '15:50', end: '17:20', subject: 'Теория политики', control: 'зач', teacher: 'доц. Побережная О.Е.', room: '604' },
-        { start: '17:20', end: '18:40', subject: 'Уголовное право', control: 'экз', teacher: 'доц. Федчук И.Л.', room: '202' },
-        { start: '18:50', end: '20:10', subject: 'Уголовное право', control: 'экз', teacher: 'доц. Федчук И.Л.', room: '202' }
-      ],
-      '2026-11-02': [
-        { start: '14:10', end: '15:30', subject: 'Хозяйственное право', control: 'экз', teacher: 'ст.преп. Гавриленко А.В.', room: 'уточняется' },
-        { start: '15:50', end: '17:20', subject: 'Теория политики', control: 'зач', teacher: 'доц. Побережная О.Е.', room: 'уточняется' },
-        { start: '17:20', end: '18:40', subject: 'Организация избирательных кампаний', control: 'зач', teacher: 'доц. Юсупов П.В.', room: 'уточняется' }
-      ],
-      '2026-11-03': [
-        { start: '14:10', end: '15:30', subject: 'Этнополитология', control: 'экз', teacher: 'доц. Слуцкая Л.В.', room: 'уточняется' },
-        { start: '15:50', end: '17:20', subject: 'Политическая коммуникация', control: 'зач', teacher: 'доц. Абраменко Е.Г.', room: 'уточняется' },
-        { start: '17:20', end: '18:40', subject: 'Политика в сфере цифровой трансформации', control: 'зач', teacher: 'доц. Ильина Е.М.', room: 'уточняется' },
-        { start: '18:50', end: '20:10', subject: 'Политика в сфере цифровой трансформации', control: 'зач', teacher: 'доц. Ильина Е.М.', room: 'уточняется' }
-      ],
-      '2026-11-04': [
-        { start: '14:10', end: '15:30', subject: 'Организация избирательных кампаний', control: 'зач', teacher: 'доц. Юсупов П.В.', room: 'уточняется' },
-        { start: '15:50', end: '17:20', subject: 'Семейное право', control: 'зач', teacher: 'ст.преп. Наумович Т.В.', room: 'уточняется' },
-        { start: '17:20', end: '18:40', subject: 'Этнополитология', control: 'экз', teacher: 'доц. Слуцкая Л.В.', room: 'уточняется' },
-        { start: '18:50', end: '20:10', subject: 'Уголовное право', control: 'экз', teacher: 'доц. Федчук И.Л.', room: 'уточняется' }
-      ],
-      '2026-11-05': [
-        { start: '14:10', end: '15:30', subject: 'Право социального обеспечения', control: 'зач', teacher: 'доц. Постовалова Т.А.', room: 'уточняется' },
-        { start: '15:50', end: '17:10', subject: 'Право социального обеспечения', control: 'зач', teacher: 'доц. Постовалова Т.А.', room: 'уточняется', note: 'С 17:10 до 18:50 окно у 1Б!' },
-        { start: '18:50', end: '20:10', subject: 'Этнополитология', control: 'экз', teacher: 'доц. Слуцкая Л.В.', room: 'уточняется' }
-      ],
-      '2026-11-06': [
-        { start: '14:10', end: '15:30', subject: 'Право социального обеспечения', control: 'зач', teacher: 'доц. Постовалова Т.А.', room: 'уточняется' },
-        { start: '15:50', end: '17:10', subject: 'Право социального обеспечения', control: 'зач', teacher: 'доц. Постовалова Т.А.', room: 'уточняется' }
-      ],
-      '2026-11-09': [
-        { start: '14:10', end: '15:30', subject: 'Земельное и аграрное право', control: 'зач', teacher: 'доц. Саскевич В.В.', room: 'уточняется' },
-        { start: '15:50', end: '17:10', subject: 'Уголовный процесс', control: 'зач', teacher: 'доц. Долгоруков С.В.', room: 'уточняется' },
-        { start: '17:20', end: '18:40', subject: 'Уголовный процесс', control: 'зач', teacher: 'доц. Долгоруков С.В.', room: 'уточняется' }
-      ],
-      '2026-11-10': [
-        { start: '14:10', end: '15:30', subject: 'Геополитические проблемы в современном мире', control: 'зач', teacher: 'доц. Симановский С.И.', room: 'уточняется' },
-        { start: '15:50', end: '17:10', subject: 'Геополитические проблемы в современном мире', control: 'зач', teacher: 'доц. Симановский С.И.', room: 'уточняется' },
-        { start: '17:20', end: '18:40', subject: 'Политика в сфере цифровой трансформации', control: 'зач', teacher: 'доц. Ильина Е.М.', room: 'уточняется' },
-        { start: '18:50', end: '20:10', subject: 'Политика в сфере цифровой трансформации', control: 'зач', teacher: 'доц. Ильина Е.М.', room: 'уточняется' }
-      ],
-      '2026-11-11': [
-        { start: '14:10', end: '15:30', subject: 'Политические проблемы современной глобалистики', control: 'зач', teacher: 'проф. Круглова Г.А.', room: 'уточняется' },
-        { start: '15:50', end: '17:10', subject: 'Земельное и аграрное право', control: 'зач', teacher: 'доц. Саскевич В.В.', room: 'уточняется' },
-        { start: '17:20', end: '18:40', subject: 'Геополитические проблемы в современном мире', control: 'зач', teacher: 'доц. Симановский С.И.', room: 'уточняется' },
-        { start: '18:50', end: '20:10', subject: 'Геополитические проблемы в современном мире', control: 'зач', teacher: 'доц. Симановский С.И.', room: 'уточняется' }
-      ],
-      '2026-11-12': [
-        { start: '14:10', end: '15:30', subject: 'Политические проблемы современной глобалистики', control: 'зач', teacher: 'проф. Круглова Г.А.', room: 'уточняется' },
-        { start: '15:50', end: '17:10', subject: 'Политические проблемы современной глобалистики', control: 'зач', teacher: 'проф. Круглова Г.А.', room: 'уточняется' },
-        { start: '17:20', end: '18:40', subject: 'Уголовный процесс', control: 'зач', teacher: 'доц. Долгоруков С.В.', room: 'уточняется' },
-        { start: '18:50', end: '20:10', subject: 'Уголовный процесс', control: 'зач', teacher: 'доц. Долгоруков С.В.', room: 'уточняется' }
-      ],
-      '2026-11-13': [
-        { start: '14:10', end: '15:30', subject: 'Земельное и аграрное право', control: 'зач', teacher: 'доц. Саскевич В.В.', room: 'уточняется' },
-        { start: '15:50', end: '17:10', subject: 'Земельное и аграрное право', control: 'зач', teacher: 'доц. Саскевич В.В.', room: 'уточняется' },
-        { start: '17:20', end: '18:40', subject: 'Политика в сфере цифровой трансформации', control: 'зач', teacher: 'доц. Ильина Е.М.', room: 'уточняется' }
-      ]
-    };
+    function sanitizeClassesData(classesObj) {
+      if (!classesObj || typeof classesObj !== 'object') return {};
+      for (const d in classesObj) {
+        if (Array.isArray(classesObj[d])) {
+          classesObj[d].forEach(c => {
+            if (c && c.start === '14:10' && c.end === '15:50') {
+              c.end = '15:30';
+            }
+          });
+        }
+      }
+      return classesObj;
+    }
 
     function loadParsedStorage(key, fallbackObj) {
       try {
@@ -901,17 +817,7 @@
       return JSON.parse(JSON.stringify(fallbackObj));
     }
 
-    let CLASSES         = loadParsedStorage(STORAGE_KEY_CLASSES, DEFAULT_CLASSES);
-    // Авто-коррекция времени 14:10-15:50 -> 14:10-15:30
-    for (const d in CLASSES) {
-      if (Array.isArray(CLASSES[d])) {
-        CLASSES[d].forEach(c => {
-          if (c && c.start === '14:10' && c.end === '15:50') {
-            c.end = '15:30';
-          }
-        });
-      }
-    }
+    let CLASSES         = sanitizeClassesData(loadParsedStorage(STORAGE_KEY_CLASSES, DEFAULT_CLASSES));
     let EXAMS           = loadParsedStorage(STORAGE_KEY_EXAMS, DEFAULT_EXAMS);
     let WORK_SHIFTS_24H = loadParsedStorage(STORAGE_KEY_SHIFTS, DEFAULT_WORK_SHIFTS_24H);
     let PERSONAL_NOTES  = loadParsedStorage(STORAGE_KEY_NOTES, DEFAULT_PERSONAL_NOTES);
@@ -1387,6 +1293,18 @@
 
       document.getElementById('liveClock').textContent = `${hh}:${mm}:${ss}`;
       checkAutoTriggers(now);
+
+      if (Object.keys(CLASSES).length === 0 && EXAMS.length === 0) {
+        document.getElementById('assistantReportBox').innerHTML = `
+          <div class="p-3.5 sm:p-4 rounded-2xl bg-gray-950/80 border border-white/10 text-center space-y-1.5">
+            <div class="text-[10px] sm:text-xs font-bold text-indigo-300 uppercase tracking-wider">⏳ Синхронизация расписания</div>
+            <div class="text-xs sm:text-sm font-semibold text-white">Загрузка данных из schedule.json...</div>
+            <div class="text-[11px] text-gray-400">Приложение получает актуальную сетку пар и зачётов с GitHub.</div>
+          </div>
+        `;
+        plainReportForCopy = 'Загрузка расписания из schedule.json...';
+        return;
+      }
 
       const todayIso = toIsoDate(now);
       const tmrwObj = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 12, 0, 0);
@@ -2156,27 +2074,40 @@
       showSyncMessage('📋 Полная база расписания скопирована в буфер обмена!');
     }
 
-    function resetToFactorySchedule() {
+    async function resetToFactorySchedule() {
       localStorage.removeItem(STORAGE_KEY_CLASSES);
       localStorage.removeItem(STORAGE_KEY_EXAMS);
       localStorage.removeItem(STORAGE_KEY_SHIFTS);
       localStorage.removeItem(STORAGE_KEY_NOTES);
       localStorage.removeItem(STORAGE_KEY_STAMP);
-      CLASSES = JSON.parse(JSON.stringify(DEFAULT_CLASSES));
-      EXAMS = JSON.parse(JSON.stringify(DEFAULT_EXAMS));
-      WORK_SHIFTS_24H = JSON.parse(JSON.stringify(DEFAULT_WORK_SHIFTS_24H));
-      PERSONAL_NOTES = JSON.parse(JSON.stringify(DEFAULT_PERSONAL_NOTES));
-      logCalendarChange('Сброс базы', 'Возврат к исходному стенду деканата от 26.10.2026');
+      CLASSES = {};
+      EXAMS = [];
+      WORK_SHIFTS_24H = [];
+      PERSONAL_NOTES = {};
       updateStorageBadge();
       refreshAllViews();
-      showSyncMessage('🔄 База сброшена к стенду деканата от 26.10.2026.');
-      showToast('🔄 Расписание сброшено к исходному');
+      showSyncMessage('⏳ Загружаем чистую базу из schedule.json...');
+      const loaded = await pullScheduleFromGithub(true);
+      if (loaded) {
+        logCalendarChange('Сброс базы', 'База перезагружена из файла schedule.json');
+        showSyncMessage('🔄 База успешно перезагружена из schedule.json!');
+        showToast('🔄 База перезагружена из schedule.json');
+      } else {
+        showSyncMessage('⚠️ Локальная память очищена. Убедись, что файл schedule.json доступен.', true);
+      }
     }
 
     function updateStorageBadge() {
       const stamp = localStorage.getItem(STORAGE_KEY_STAMP);
       const badge = document.getElementById('storageStatusBadge');
-      badge.textContent = stamp ? stamp : 'Стенд 26.10';
+      if (!badge) return;
+      if (stamp) {
+        badge.textContent = stamp;
+      } else if (Object.keys(CLASSES).length > 0) {
+        badge.textContent = 'schedule.json';
+      } else {
+        badge.textContent = 'Синхронизация...';
+      }
     }
 
     async function scanPhotoWithGemini() {
@@ -3623,7 +3554,7 @@
       let changed = false;
 
       if (parsed.classes && typeof parsed.classes === 'object') {
-        CLASSES = parsed.classes;
+        CLASSES = sanitizeClassesData(parsed.classes);
         changed = true;
       }
       if (Array.isArray(parsed.exams)) {
@@ -3680,25 +3611,36 @@
           const headers = { 'Accept': 'application/vnd.github.v3+json' };
           if (token) headers['Authorization'] = `Bearer ${token}`;
 
-          const resp = await fetch(apiUrl, { headers, cache: 'no-store' });
-          if (resp.ok) {
-            const meta = await resp.json();
-            if (meta && meta.content) {
-              parsedData = JSON.parse(decodeUtf8Base64(meta.content));
+          try {
+            const resp = await fetch(apiUrl, { headers, cache: 'no-store' });
+            if (resp.ok) {
+              const meta = await resp.json();
+              if (meta && meta.content) {
+                parsedData = JSON.parse(decodeUtf8Base64(meta.content));
+              }
             }
-          } else {
-            const rawUrl = `https://raw.githubusercontent.com/${repo}/${branch}/${path}?t=${Date.now()}`;
-            const rawResp = await fetch(rawUrl, { cache: 'no-store' });
-            if (rawResp.ok) {
-              parsedData = await rawResp.json();
+          } catch (e) {}
+
+          if (!parsedData) {
+            try {
+              const rawUrl = `https://raw.githubusercontent.com/${repo}/${branch}/${path}?t=${Date.now()}`;
+              const rawResp = await fetch(rawUrl, { cache: 'no-store' });
+              if (rawResp.ok) {
+                parsedData = await rawResp.json();
+              }
+            } catch (e) {}
+          }
+        }
+
+        // Если через GitHub API/raw не загрузилось или репозиторий ещё не указан — пробуем локальный schedule.json
+        if (!parsedData) {
+          try {
+            const sameOriginUrl = new URL(`${path}?t=${Date.now()}`, window.location.href).href;
+            const resp = await fetch(sameOriginUrl, { cache: 'no-store' });
+            if (resp.ok) {
+              parsedData = await resp.json();
             }
-          }
-        } else if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-          const sameOriginUrl = new URL(`${path}?t=${Date.now()}`, window.location.href).href;
-          const resp = await fetch(sameOriginUrl, { cache: 'no-store' });
-          if (resp.ok) {
-            parsedData = await resp.json();
-          }
+          } catch (e) {}
         }
 
         if (parsedData && applyRemoteSchedulePayload(parsedData, 'GitHub')) {
