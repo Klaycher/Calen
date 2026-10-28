@@ -171,7 +171,6 @@
 
         <!-- Легенда -->
         <div class="flex flex-wrap items-center gap-1 sm:gap-1.5 mb-2.5 pb-2 border-b border-white/10 text-[9px] sm:text-[11px]">
-          <span class="px-1.5 py-0.5 rounded badge-session font-medium">сессия ВД</span>
           <span id="legendShiftBadge" class="hidden px-1.5 py-0.5 rounded badge-work24 font-medium">смена 09–09</span>
           <span class="px-1.5 py-0.5 rounded badge-zach font-semibold">ЗАЧЁТ</span>
           <span class="px-1.5 py-0.5 rounded badge-exam font-semibold">ЭКЗАМЕН</span>
@@ -1495,7 +1494,7 @@
         const notes = PERSONAL_NOTES[iso] || [];
         const shift = getShiftStatus(iso);
 
-        let badges = `<div class="hidden sm:block text-[9px] sm:text-[10px] px-1 py-0.5 rounded badge-session font-semibold text-center leading-tight truncate">сессия ВД</div>`;
+        let badges = '';
 
         if (isAdminMode) {
           if (shift.startsAt9) {
