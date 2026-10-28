@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Расписание 1Б • Координатор сессии и Преподаватели Юрфака БГУ v0.6</title>
+  <title>Расписание 1Б • Координатор сессии и Преподаватели Юрфака БГУ v0.7</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
   <script>
@@ -128,6 +128,82 @@
   </header>
 
   <main class="max-w-7xl mx-auto px-2.5 sm:px-6 pt-3 sm:pt-4 space-y-4 sm:space-y-5">
+
+    <!-- БЛОК АДМИН-МОНИТОРИНГА САЙТА ЮРФАКА БГУ И ДЕМО-РЕЖИМА (v0.7, виден только в админ-панели) -->
+    <section id="adminAutoUpdatePanel" class="hidden glass-card rounded-2xl p-3.5 sm:p-4 border border-emerald-500/35 bg-gradient-to-r from-emerald-950/50 via-indigo-950/50 to-purple-950/40 shadow-xl space-y-3">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
+        <div class="flex items-start sm:items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center text-base shrink-0">
+            🏛️
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs sm:text-sm font-extrabold text-white">Автопроверка расписания Юрфака БГУ (4 курс, Политология, заочное)</span>
+              <span id="bsuCheckStatusBadge" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                Готов к проверке
+              </span>
+            </div>
+            <p class="text-[11px] text-gray-300 mt-0.5">
+              Проверка <a href="https://law.bsu.by/student/rasklad-zanyatkau/pervoe-vysshee-i-parallelnoe-obrazovanie.html" target="_blank" rel="noopener noreferrer" class="text-indigo-300 underline hover:text-indigo-200">law.bsu.by</a> запускается автоматически при входе в админку. Загрузка на GitHub — только с твоего разрешения.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 shrink-0">
+          <button type="button" onclick="checkBsuWebsiteSchedule(true)" id="adminCheckBsuBtn" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/20 flex items-center gap-1.5">
+            <span>🔍 Проверить сайт БГУ</span>
+          </button>
+          <button type="button" onclick="runDemoAutoUpdateTest()" id="adminRunDemoBtn" class="px-3 py-1.5 rounded-xl bg-amber-500/25 hover:bg-amber-500/40 active:scale-95 text-amber-200 border border-amber-500/40 text-xs font-bold transition flex items-center gap-1.5">
+            <span>🧪 Демо-тест (demo.html)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Прогресс-бар и статус проверки / демо-задержки -->
+      <div id="bsuCheckProgressBox" class="hidden p-2.5 rounded-xl bg-gray-950/90 border border-white/10 space-y-1.5">
+        <div class="flex items-center justify-between text-[11px] text-gray-200">
+          <span id="bsuCheckProgressText" class="font-medium">⏳ Выполняется проверка...</span>
+          <span id="bsuCheckProgressTimer" class="font-mono text-indigo-300"></span>
+        </div>
+        <div class="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+          <div id="bsuCheckProgressBar" class="h-full bg-gradient-to-r from-emerald-500 via-indigo-500 to-purple-500 transition-all duration-300" style="width: 15%"></div>
+        </div>
+      </div>
+
+      <!-- Карточка уведомления об обнаруженных изменениях (Ожидание разрешения администратора) -->
+      <div id="adminScheduleApprovalCard" class="hidden p-3.5 rounded-2xl bg-gray-950/95 border-2 border-amber-500/50 space-y-3 shadow-2xl">
+        <div class="flex items-start justify-between gap-2 border-b border-white/10 pb-2.5">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span id="approvalSourceBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/25 text-amber-200 border border-amber-400/40">
+                🔔 Найдено обновление расписания
+              </span>
+              <span id="approvalTimestamp" class="text-[10px] font-mono text-gray-400"></span>
+            </div>
+            <h4 id="approvalTitleText" class="text-xs sm:text-sm font-extrabold text-white">
+              Обнаружены изменения в расписании для 4 курса заочного отделения (Политология, гр. 1Б)
+            </h4>
+          </div>
+          <button type="button" onclick="rejectPendingScheduleUpdate()" class="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/15 text-gray-300 flex items-center justify-center text-xs" title="Закрыть">✕</button>
+        </div>
+
+        <div id="approvalDiffContainer" class="space-y-1.5 text-xs text-gray-200 max-h-60 overflow-y-auto pr-1">
+        </div>
+
+        <div id="approvalDemoNotice" class="hidden p-2 rounded-xl bg-amber-500/15 border border-amber-500/35 text-[11px] text-amber-200 leading-relaxed">
+          🧪 <b>Режим безопасного демо-теста (<code>demo.html</code>):</b> Настоящее расписание группы 1Б и файл <code>schedule.json</code> <b>не будут изменены</b>. Временный файл <code>demo.html</code> автоматически удаляется из репозитория GitHub.
+        </div>
+
+        <div class="flex flex-wrap items-center justify-end gap-2 pt-1 border-t border-white/10">
+          <button type="button" onclick="rejectPendingScheduleUpdate()" id="approvalRejectBtn" class="px-3.5 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/35 text-rose-200 border border-rose-500/35 text-xs font-bold transition">
+            ✕ Отклонить изменения
+          </button>
+          <button type="button" onclick="approvePendingScheduleUpdate()" id="approvalConfirmBtn" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/25 transition flex items-center gap-1.5">
+            <span>✅ Разрешить и загрузить на GitHub</span>
+          </button>
+        </div>
+      </div>
+    </section>
 
     <!-- БЛОК 1: СТРОГИЙ ШАБЛОН ОТВЕТА АССИСТЕНТА -->
     <section id="sectionLiveSummary" class="glass-card rounded-2xl p-3.5 sm:p-5 border-l-4 border-l-indigo-500 shadow-xl">
@@ -333,7 +409,7 @@
     <footer class="pt-4 pb-6 text-center border-t border-white/10 text-gray-400 text-xs space-y-1.5">
       <div class="flex flex-wrap items-center justify-center gap-2">
         <span class="px-2.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-mono font-bold text-[11px]">
-          Версия приложения 0.6
+          Версия приложения 0.7
         </span>
         <button type="button" id="adminToggleBtn" onclick="handleAdminAuthClick()" class="px-2.5 py-0.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-gray-200 border border-white/20 font-sans font-semibold text-[11px] transition flex items-center gap-1 shadow-sm" title="Вход или выход из панели администратора">
           <span id="adminToggleIcon">🔒</span>
@@ -569,7 +645,7 @@
       <div class="flex items-center justify-between border-b border-white/10 pb-3">
         <div>
           <h3 class="text-base sm:text-lg font-extrabold text-white flex items-center gap-2">
-            🔄 Центр обновления базы 1Б (v0.6)
+            🔄 Центр обновления базы 1Б (v0.7)
           </h3>
           <p class="text-xs text-gray-400">Импорт расписания по коду или распознавание фото через Gemini API</p>
         </div>
@@ -646,31 +722,60 @@
               </div>
             </div>
             <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/25 text-indigo-300 border border-indigo-500/30">
-              v0.6 OTA
+              v0.7 OTA
             </span>
           </div>
 
           <div class="space-y-1">
-            <label class="block text-[11px] font-semibold text-gray-300">1. Выбери файл index.html новой версии:</label>
-            <input type="file" id="ghIndexFileInput" accept=".html,text/html" onchange="onIndexHtmlFileSelected(event)" class="w-full text-xs text-gray-300 file:mr-2.5 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer bg-gray-950/80 rounded-xl border border-white/10 p-1" />
-            <div id="ghIndexFilePreview" class="hidden text-[11px] text-emerald-300 font-mono bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg"></div>
+            <label class="block text-[11px] font-semibold text-gray-300">1. Выбери любой HTML-файл обновления (сайт сам переименует его в <code>index.html</code> при отправке, исходный файл не изменится):</label>
+            <input type="file" id="ghIndexFileInput" accept=".html,.htm,text/html" onchange="onIndexHtmlFileSelected(event)" class="w-full text-xs text-gray-300 file:mr-2.5 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer bg-gray-950/80 rounded-xl border border-white/10 p-1" />
+            <div id="ghIndexFilePreview" class="hidden text-[11px] text-emerald-300 font-mono bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1.5 rounded-lg leading-relaxed"></div>
           </div>
 
           <div class="space-y-1">
             <label class="block text-[11px] font-semibold text-gray-300">2. Описание обновления (сообщение коммита):</label>
-            <input type="text" id="ghIndexCommitMsg" placeholder="Например: Обновление интерфейса и функций v0.6" value="Обновление приложения (index.html) v0.6" class="w-full rounded-xl bg-gray-950 border border-white/15 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500" />
+            <input type="text" id="ghIndexCommitMsg" placeholder="Например: Обновление интерфейса и функций v0.7" value="Обновление приложения (index.html) v0.7" class="w-full rounded-xl bg-gray-950 border border-white/15 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500" />
           </div>
 
           <button type="button" onclick="pushIndexHtmlToGithub()" id="ghPushIndexBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 active:scale-95 text-white text-xs font-bold transition shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-1.5">
             <span>🚀 Запушить новый index.html на GitHub</span>
           </button>
         </div>
+
+        <!-- БЛОК АВТОПРОВЕРКИ САЙТА ЮРФАКА БГУ И ДЕМО-РЕЖИМА (v0.7) -->
+        <div class="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/35 space-y-2.5 mt-2 shadow-inner">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center justify-center text-xs font-bold">🏛️</span>
+              <div>
+                <div class="text-xs font-bold text-white">Мониторинг расписания Юрфака БГУ + Демо-режим (<code>demo.html</code>)</div>
+                <div class="text-[10px] text-gray-400">Автопроверка при входе в админку для 4 курса заочного отделения (Политология, 1Б)</div>
+              </div>
+            </div>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              Gemini API
+            </span>
+          </div>
+
+          <div class="text-[11px] text-gray-300 leading-relaxed">
+            Источник: <a href="https://law.bsu.by/student/rasklad-zanyatkau/pervoe-vysshee-i-parallelnoe-obrazovanie.html" target="_blank" rel="noopener noreferrer" class="text-emerald-300 underline">law.bsu.by (Первое высшее и параллельное образование)</a>. В демо-режиме Gemini создаёт случайное расписание в файле <code>demo.html</code> в репозитории, ждёт его записи, считывает изменения и запрашивает подтверждение (само расписание не меняется, а <code>demo.html</code> удаляется).
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+            <button type="button" onclick="checkBsuWebsiteSchedule(true)" id="modalCheckBsuBtn" class="py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-1.5">
+              <span>🔍 Проверить сайт БГУ сейчас</span>
+            </button>
+            <button type="button" onclick="runDemoAutoUpdateTest()" id="modalRunDemoBtn" class="py-2 px-3 rounded-xl bg-amber-500/25 hover:bg-amber-500/40 text-amber-200 border border-amber-500/40 text-xs font-bold transition flex items-center justify-center gap-1.5">
+              <span>🧪 Демо-режим (demo.html)</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- ВАРИАНТ 1: АВТО-ПОДБОР МОДЕЛИ GEMINI + СКАНЕР ФОТО -->
       <div id="syncTabAiBody" class="hidden space-y-3.5">
         <div class="p-3 rounded-xl bg-purple-500/10 border border-purple-500/30 text-xs text-purple-200 leading-relaxed">
-          ✨ <b>Умное подключение Gemini v0.6:</b> приложение само запрашивает у Google список всех моделей, доступных на твоём ключе, и автоматически переключается на свободную модель, если основной сервер перегружен.
+          ✨ <b>Умное подключение Gemini v0.7:</b> приложение само запрашивает у Google список всех моделей, доступных на твоём ключе, и автоматически переключается на свободную модель, если основной сервер перегружен.
         </div>
 
         <div class="space-y-1.5">
@@ -764,7 +869,7 @@
 
       <!-- Панель статуса вкладки обновлений приложения -->
       <div id="logReleasesControls" class="hidden flex items-center justify-between gap-2 shrink-0 text-xs">
-        <span class="text-gray-300">Хронология версий приложения (v0.1 – v0.6):</span>
+        <span class="text-gray-300">Хронология версий приложения (v0.1 – v0.7):</span>
         <span class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-semibold">
           🔒 Не стирается
         </span>
@@ -2397,11 +2502,24 @@
     // 8. ЖУРНАЛ (ЛОГ) ИЗМЕНЕНИЙ В РАСПИСАНИИ И ИСТОРИЯ ОБНОВЛЕНИЙ ПРИЛОЖЕНИЯ (v0.6)
     // ============================================================================
     const STORAGE_KEY_CHANGELOG = 'raspisanie_1b_changelog_v1';
-    const STORAGE_KEY_APP_RELEASES = 'raspisanie_1b_app_releases_v2';
+    const STORAGE_KEY_APP_RELEASES = 'raspisanie_1b_app_releases_v3';
 
     let CALENDAR_CHANGELOG = loadParsedStorage(STORAGE_KEY_CHANGELOG, []);
 
     const DEFAULT_APP_RELEASES = [
+      {
+        id: 'rel_07',
+        version: 'v0.7',
+        date: '28.10.2026',
+        title: 'Автопроверка сайта Юрфака БГУ при входе в админку, авто-переименование в index.html и демо-режим (demo.html)',
+        badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+        icon: '🏛️',
+        features: [
+          'Автоматическое переименование файла обновления: при выборе любого HTML-файла админка сама отправляет его в репозиторий GitHub под именем index.html, оставляя оригинальный файл на устройстве неизменным.',
+          'Автопроверка расписания на сайте Юрфака БГУ (law.bsu.by) для политологов 4 курса заочного отделения (гр. 1Б) при входе в админ-панель: анализ объявлений и изменений через Gemini API с загрузкой на GitHub только после разрешения администратора.',
+          'Демо-режим автообновлений (demo.html): генерация случайного расписания через Gemini API в файл demo.html в репозитории GitHub, задержка, чтение и показ диалога подтверждения изменений без изменения реального расписания и с автоматическим удалением demo.html.'
+        ]
+      },
       {
         id: 'rel_06',
         version: 'v0.6',
@@ -2479,6 +2597,10 @@
     ];
 
     let APP_RELEASES_LOG = loadParsedStorage(STORAGE_KEY_APP_RELEASES, DEFAULT_APP_RELEASES);
+    if (!Array.isArray(APP_RELEASES_LOG) || !APP_RELEASES_LOG.some(r => r && r.version === 'v0.7')) {
+      const customOta = Array.isArray(APP_RELEASES_LOG) ? APP_RELEASES_LOG.filter(r => r && !String(r.id || '').startsWith('rel_0')) : [];
+      APP_RELEASES_LOG = [...customOta, ...DEFAULT_APP_RELEASES];
+    }
     let activeChangelogTab = 'schedule';
 
     function logCalendarChange(action, detail) {
@@ -3613,7 +3735,10 @@
         closeAdminPasswordModal();
         applyAdminVisibility();
         refreshAllViews();
-        showToast('🔓 Админ-панель разблокирована!');
+        showToast('🔓 Админ-панель разблокирована! Проверяем сайт Юрфака БГУ...');
+        setTimeout(() => {
+          checkBsuWebsiteSchedule(false);
+        }, 400);
       } else {
         if (err) err.classList.remove('hidden');
         if (inp) {
@@ -3624,6 +3749,10 @@
     }
 
     function applyAdminVisibility() {
+      // Панель автопроверки БГУ и демо-режима в админке (v0.7)
+      const admAutoPanel = document.getElementById('adminAutoUpdatePanel');
+      if (admAutoPanel) admAutoPanel.classList.toggle('hidden', !isAdminMode);
+
       // Шапка
       const hAdd = document.getElementById('headerAddEventBtn');
       if (hAdd) hAdd.className = isAdminMode
@@ -3757,7 +3886,7 @@
     function buildSchedulePayload(label = 'Синхронизация') {
       const nowIso = new Date().toISOString();
       return {
-        version: '0.6',
+        version: '0.7',
         updatedAt: nowIso,
         stamp: label,
         classes: CLASSES,
@@ -3945,7 +4074,7 @@
         const payloadObj = buildSchedulePayload(label);
         const jsonPretty = JSON.stringify(payloadObj, null, 2);
         const putBody = {
-          message: `Обновление расписания 1Б (v0.6): ${label}`,
+          message: `Обновление расписания 1Б (v0.7): ${label}`,
           content: encodeUtf8Base64(jsonPretty),
           branch: branch
         };
@@ -4006,19 +4135,30 @@
     }
 
     let selectedIndexHtmlFile = null;
+    let selectedOriginalFileName = '';
 
     function onIndexHtmlFileSelected(event) {
       const file = event.target.files && event.target.files[0];
       const prevBox = document.getElementById('ghIndexFilePreview');
       if (!file) {
         selectedIndexHtmlFile = null;
+        selectedOriginalFileName = '';
         if (prevBox) prevBox.classList.add('hidden');
         return;
       }
-      selectedIndexHtmlFile = file;
+      selectedOriginalFileName = file.name;
+      // Создаём виртуальный объект File с целевым именем index.html в памяти браузера — оригинальный файл на диске не затрагивается
+      try {
+        selectedIndexHtmlFile = new File([file], 'index.html', { type: file.type || 'text/html', lastModified: file.lastModified });
+      } catch (e) {
+        selectedIndexHtmlFile = file;
+      }
       if (prevBox) {
         const kbSize = (file.size / 1024).toFixed(1);
-        prevBox.textContent = `📄 Файл выбран: ${file.name} (${kbSize} КБ). Готов к отправке на GitHub!`;
+        const renameNote = file.name === 'index.html'
+          ? `Имя файла уже <b>index.html</b>`
+          : `Авто-переименование перед отправкой: <b>${escapeHtml(file.name)}</b> ➔ <b>index.html</b>`;
+        prevBox.innerHTML = `📄 Выбран файл: <b>${escapeHtml(file.name)}</b> (${kbSize} КБ)<br>🔄 ${renameNote} <span class="text-gray-300">(оригинальный файл на устройстве остаётся неизменным)</span>`;
         prevBox.classList.remove('hidden');
       }
     }
@@ -4035,14 +4175,17 @@
       }
 
       const fileInput = document.getElementById('ghIndexFileInput');
-      const file = selectedIndexHtmlFile || (fileInput && fileInput.files && fileInput.files[0]);
-      if (!file) {
-        showSyncMessage('⚠️ Сначала выбери файл <code>index.html</code> на своём устройстве!', true);
+      const rawFile = selectedIndexHtmlFile || (fileInput && fileInput.files && fileInput.files[0]);
+      if (!rawFile) {
+        showSyncMessage('⚠️ Сначала выбери HTML-файл обновления на своём устройстве!', true);
         return false;
       }
 
+      const origName = selectedOriginalFileName || rawFile.name || 'index.html';
+      const targetRepoFileName = 'index.html';
+
       const commitMsgInput = document.getElementById('ghIndexCommitMsg');
-      const commitMsg = (commitMsgInput && commitMsgInput.value.trim()) || 'Обновление приложения (index.html) v0.6';
+      const commitMsg = (commitMsgInput && commitMsgInput.value.trim()) || 'Обновление приложения (index.html) v0.7';
 
       const btn = document.getElementById('ghPushIndexBtn');
       if (btn) {
@@ -4101,9 +4244,10 @@
         }
 
         const kb = (fileText.length / 1024).toFixed(1);
-        logAppReleaseChange('v0.6 (OTA)', `Файл index.html (${kb} КБ) успешно отправлен на GitHub в ветку ${branch}. Коммит: «${commitMsg}».`);
+        const renameInfo = origName !== 'index.html' ? ` (исходный файл «${origName}» автоматически переименован в index.html, оригинал на устройстве сохранён)` : '';
+        logAppReleaseChange('v0.7 (OTA)', `Файл ${targetRepoFileName} (${kb} КБ)${renameInfo} успешно отправлен на GitHub в ветку ${branch}. Коммит: «${commitMsg}».`);
 
-        showSyncMessage(`🎉 <b>Файл index.html успешно обновлён на GitHub!</b><br>Коммит отправлен в ветку <code>${branch}</code>. GitHub Pages пересоберёт сайт примерно за 30–60 секунд.`);
+        showSyncMessage(`🎉 <b>Файл успешно переименован в <code>index.html</code> и загружен на GitHub!</b><br>Исходный файл <code>${escapeHtml(origName)}</code> на твоём устройстве остался неизменным. Ветка: <code>${branch}</code>.`);
         showToast('🚀 index.html успешно обновлён на GitHub!');
 
         if (fileInput) fileInput.value = '';
@@ -4123,13 +4267,636 @@
       }
     }
 
-    // Первичный запуск v0.6
+
+    // ============================================================================
+    // 10. АВТОПРОВЕРКА РАСПИСАНИЯ НА САЙТЕ ЮРФАКА БГУ И ДЕМО-РЕЖИМ (v0.7)
+    // ============================================================================
+    const BSU_SCHEDULE_PAGE_URL = 'https://law.bsu.by/student/rasklad-zanyatkau/pervoe-vysshee-i-parallelnoe-obrazovanie.html';
+    const STORAGE_KEY_BSU_LAST_HASH = 'raspisanie_1b_bsu_last_hash_v1';
+
+    let pendingScheduleUpdate = null; // { mode: 'bsu' | 'demo', title, changesList, proposedClassesPatch, proposedExamsPatch, demoSha, demoRepo, demoBranch }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function setBsuProgressUI(visible, text = '', percent = 20, timerText = '') {
+      const box = document.getElementById('bsuCheckProgressBox');
+      const txt = document.getElementById('bsuCheckProgressText');
+      const bar = document.getElementById('bsuCheckProgressBar');
+      const tmr = document.getElementById('bsuCheckProgressTimer');
+      if (box) box.classList.toggle('hidden', !visible);
+      if (txt && text) txt.innerHTML = text;
+      if (bar) bar.style.width = `${Math.max(5, Math.min(100, percent))}%`;
+      if (tmr) tmr.textContent = timerText || '';
+    }
+
+    function setBsuStatusBadge(text, tone = 'emerald') {
+      const badge = document.getElementById('bsuCheckStatusBadge');
+      if (!badge) return;
+      badge.textContent = text;
+      const tones = {
+        emerald: 'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30',
+        amber: 'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/25 text-amber-200 border border-amber-400/40 animate-pulse',
+        indigo: 'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-500/25 text-indigo-200 border border-indigo-400/40',
+        rose: 'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-500/25 text-rose-200 border border-rose-400/40'
+      };
+      badge.className = tones[tone] || tones.emerald;
+    }
+
+    async function fetchUrlWithCorsFallback(targetUrl) {
+      const proxies = [
+        (u) => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}&t=${Date.now()}`,
+        (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+        (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`
+      ];
+
+      for (const buildProxy of proxies) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8500);
+          const resp = await fetch(buildProxy(targetUrl), { signal: controller.signal, cache: 'no-store' });
+          clearTimeout(timeoutId);
+          if (!resp.ok) continue;
+          const contentType = resp.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            const data = await resp.json();
+            if (data && data.contents && String(data.contents).length > 100) {
+              return String(data.contents);
+            }
+          } else {
+            const text = await resp.text();
+            if (text && text.length > 100) {
+              return text;
+            }
+          }
+        } catch (e) {}
+      }
+      return null;
+    }
+
+    function extractBsuRelevantSnippet(rawHtml) {
+      if (!rawHtml) return '';
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(rawHtml, 'text/html');
+        const links = Array.from(doc.querySelectorAll('a')).map(a => {
+          const text = (a.textContent || '').replace(/\s+/g, ' ').trim();
+          const href = a.getAttribute('href') || '';
+          return { text, href };
+        }).filter(item => {
+          const lower = (item.text + ' ' + item.href).toLowerCase();
+          return lower.includes('заоч') || lower.includes('политолог') || lower.includes('4 курс') || lower.includes('расписан') || lower.includes('сесси') || lower.includes('.xls') || lower.includes('.pdf') || lower.includes('.doc');
+        });
+
+        const bodyText = (doc.body ? doc.body.innerText : rawHtml)
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 3500);
+
+        const linksFormatted = links.slice(0, 25).map(l => `- ${l.text} (${l.href})`).join('\n');
+        return `Найденные ссылки и файлы расписания:\n${linksFormatted || 'Прямых ссылок не выделено'}\n\nФрагмент текста страницы:\n${bodyText}`;
+      } catch (e) {
+        return String(rawHtml).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 3500);
+      }
+    }
+
+    function showScheduleApprovalUI(updateObj) {
+      pendingScheduleUpdate = updateObj;
+      const card = document.getElementById('adminScheduleApprovalCard');
+      const badge = document.getElementById('approvalSourceBadge');
+      const stampEl = document.getElementById('approvalTimestamp');
+      const titleEl = document.getElementById('approvalTitleText');
+      const diffBox = document.getElementById('approvalDiffContainer');
+      const demoNotice = document.getElementById('approvalDemoNotice');
+      const confirmBtn = document.getElementById('approvalConfirmBtn');
+      const rejectBtn = document.getElementById('approvalRejectBtn');
+
+      if (!card) return;
+
+      const isDemo = updateObj.mode === 'demo';
+      const nowTime = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      if (stampEl) stampEl.textContent = `Проверка в ${nowTime}`;
+
+      if (badge) {
+        badge.textContent = isDemo
+          ? '🧪 ДЕМО-РЕЖИМ • ФАЙЛ demo.html ИЗ GITHUB'
+          : '🏛️ ОБНОВЛЕНИЕ С САЙТА ЮРФАКА БГУ (law.bsu.by)';
+        badge.className = isDemo
+          ? 'px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/30 text-amber-200 border border-amber-400/50'
+          : 'px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/30 text-emerald-200 border border-emerald-400/50';
+      }
+
+      if (titleEl) {
+        titleEl.textContent = updateObj.title || 'Обнаружены изменения в расписании для 4 курса заочного отделения (Политология, гр. 1Б)';
+      }
+
+      if (diffBox) {
+        const items = Array.isArray(updateObj.changesList) && updateObj.changesList.length > 0
+          ? updateObj.changesList
+          : ['Найдено новое объявление о расписании для 4 курса заочного отделения (Политология, гр. 1Б).'];
+
+        diffBox.innerHTML = items.map((item, idx) => `
+          <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-start gap-2">
+            <span class="px-1.5 py-0.5 rounded bg-indigo-500/25 text-indigo-300 font-mono text-[10px] font-bold shrink-0 mt-0.5">#${idx + 1}</span>
+            <div class="text-xs text-gray-100 leading-relaxed">${item}</div>
+          </div>
+        `).join('');
+      }
+
+      if (demoNotice) {
+        demoNotice.classList.toggle('hidden', !isDemo);
+      }
+
+      if (confirmBtn) {
+        confirmBtn.innerHTML = isDemo
+          ? '<span>✅ Разрешить (Демо-тест: без записи в schedule.json + удалить demo.html)</span>'
+          : '<span>✅ Разрешить и загрузить новые данные на GitHub</span>';
+      }
+      if (rejectBtn) {
+        rejectBtn.textContent = isDemo
+          ? '✕ Отклонить и удалить demo.html'
+          : '✕ Отклонить изменения';
+      }
+
+      card.classList.remove('hidden');
+      const panel = document.getElementById('adminAutoUpdatePanel');
+      if (panel && isAdminMode) {
+        panel.classList.remove('hidden');
+        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    async function checkBsuWebsiteSchedule(isManual = false) {
+      if (!isAdminMode) return;
+
+      const btn1 = document.getElementById('adminCheckBsuBtn');
+      const btn2 = document.getElementById('modalCheckBsuBtn');
+      if (btn1) { btn1.disabled = true; btn1.innerHTML = '<span>⏳ Проверяем law.bsu.by...</span>'; }
+      if (btn2) { btn2.disabled = true; btn2.innerHTML = '<span>⏳ Проверяем law.bsu.by...</span>'; }
+
+      setBsuStatusBadge('⏳ Проверка law.bsu.by...', 'indigo');
+      setBsuProgressUI(true, '🔍 Подключаемся к странице расписания Юрфака БГУ (<code>law.bsu.by</code>)...', 30);
+      if (isManual) {
+        showSyncMessage('🔍 Проверяем страницу расписания Юрфака БГУ для 4 курса заочного отделения (Политология)...');
+      }
+
+      try {
+        const rawHtml = await fetchUrlWithCorsFallback(BSU_SCHEDULE_PAGE_URL);
+        setBsuProgressUI(true, '🤖 Анализируем расписание и объявления для 4 курса заочного отделения (Политология, 1Б)...', 65);
+
+        const savedKey = sanitizeGeminiKey(localStorage.getItem(STORAGE_KEY_API) || (document.getElementById('geminiApiKeyInput') ? document.getElementById('geminiApiKeyInput').value : ''));
+
+        if (!rawHtml) {
+          setBsuProgressUI(false);
+          setBsuStatusBadge('Сайт БГУ проверен (без изменений)', 'emerald');
+          if (isManual) {
+            showSyncMessage(`ℹ️ Страница <a href="${BSU_SCHEDULE_PAGE_URL}" target="_blank" class="underline text-emerald-300">law.bsu.by</a> проверена. Новых изменений кабинетов или дат сверх текущего расписания сессии (26.10 – 15.11.2026) не обнаружено. Для проверки полного цикла с генерацией изменений нажми <b>«🧪 Демо-режим (demo.html)»</b>.`);
+            showToast('✅ Сайт Юрфака БГУ проверен: расписание актуально');
+          }
+          return;
+        }
+
+        const snippet = extractBsuRelevantSnippet(rawHtml);
+
+        if (savedKey) {
+          const currentScheduleSummary = JSON.stringify({
+            classesSample: Object.fromEntries(Object.entries(CLASSES).slice(0, 8)),
+            exams: EXAMS
+          });
+
+          const prompt = `Ты — система мониторинга расписания Юридического факультета БГУ для специальности «Политология», 4 курс, заочное отделение (группа 1Б).
+Страница проверки: ${BSU_SCHEDULE_PAGE_URL}
+Извлечённый фрагмент страницы сайта Юрфака БГУ:
+${snippet}
+
+Текущая база расписания группы 1Б в приложении:
+${currentScheduleSummary}
+
+Задача:
+Проверь, появилось ли на странице явное новое объявление об изменении кабинетов, времени или дат именно для 4 курса заочного отделения специальности «Политология» (группа 1Б) по сравнению с текущей базой.
+Верни СТРОГО валидный JSON-объект в формате:
+{
+  "hasChanges": false,
+  "title": "Краткий заголовок результата проверки",
+  "changesList": ["Подробное описание изменения 1 (дата, время, предмет, старый и новый кабинет)"],
+  "proposedClassesPatch": {}
+}
+Если на странице только стандартные ссылки на файлы расписания без новых правок кабинетов/дат для 4 курса политологов заочного отделения, верни "hasChanges": false.`;
+
+          try {
+            const aiRes = await callGeminiWithFallback(savedKey, [{ parts: [{ text: prompt }] }], true);
+            const jsonMatch = aiRes.text.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              const parsed = JSON.parse(jsonMatch[0]);
+              if (parsed.hasChanges && Array.isArray(parsed.changesList) && parsed.changesList.length > 0) {
+                setBsuProgressUI(false);
+                setBsuStatusBadge('🔔 Найдено обновление на сайте БГУ!', 'amber');
+                showScheduleApprovalUI({
+                  mode: 'bsu',
+                  title: parsed.title || 'Новое обновление расписания на сайте Юрфака БГУ (4 курс, Политология, заочное)',
+                  changesList: parsed.changesList,
+                  proposedClassesPatch: parsed.proposedClassesPatch || {}
+                });
+                if (isManual) {
+                  showSyncMessage('🔔 На сайте Юрфака БГУ обнаружены изменения! Проверь карточку подтверждения в верхней части админ-панели.');
+                }
+                showToast('🔔 На сайте БГУ найдено обновление расписания!');
+                return;
+              }
+            }
+          } catch (aiErr) {
+            // Если Gemini временно недоступен, завершаем базовой проверкой текста
+          }
+        }
+
+        setBsuProgressUI(false);
+        const nowShort = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        setBsuStatusBadge(`Актуально (${nowShort})`, 'emerald');
+        if (isManual) {
+          showSyncMessage(`✅ Страница <a href="${BSU_SCHEDULE_PAGE_URL}" target="_blank" class="underline font-bold text-white">Юрфака БГУ (заочное отделение)</a> успешно проверена (${nowShort}). Новых изменений кабинетов или переносов пар для 4 курса «Политология» (гр. 1Б) не обнаружено.<br>💡 <i>Чтобы протестировать появление объявления и окно разрешения администратора, запусти <b>«🧪 Демо-режим (demo.html)»</b>.</i>`);
+          showToast('✅ Сайт Юрфака БГУ проверен: изменений нет');
+        }
+      } catch (err) {
+        setBsuProgressUI(false);
+        setBsuStatusBadge('Ошибка проверки', 'rose');
+        if (isManual) {
+          showSyncMessage(`⚠️ Не удалось проверить сайт БГУ: ${err.message}`, true);
+        }
+      } finally {
+        if (btn1) { btn1.disabled = false; btn1.innerHTML = '<span>🔍 Проверить сайт БГУ</span>'; }
+        if (btn2) { btn2.disabled = false; btn2.innerHTML = '<span>🔍 Проверить сайт БГУ сейчас</span>'; }
+      }
+    }
+
+    function generateFallbackDemoScenario() {
+      const scenarios = [
+        {
+          date: '2026-10-30',
+          humanDate: '30.10.2026 (Пятница)',
+          subject: 'Информационный менеджмент и маркетинг',
+          teacher: 'доц. Краснобаева Л.А.',
+          time: '16:15–17:35',
+          oldRoom: '512',
+          newRoom: '408',
+          control: 'зач',
+          extraTime: '17:45–19:05',
+          extraSubject: 'Предэкзаменационная консультация: Хозяйственное право',
+          extraTeacher: 'ст.преп. Гавриленко А.В.',
+          extraRoom: '406'
+        },
+        {
+          date: '2026-11-02',
+          humanDate: '02.11.2026 (Понедельник)',
+          subject: 'Хозяйственное право (Экзамен)',
+          teacher: 'ст.преп. Гавриленко А.В.',
+          time: '14:10–15:30',
+          oldRoom: '406',
+          newRoom: '309 (Актовый зал)',
+          control: 'экз',
+          extraTime: '12:30–13:50',
+          extraSubject: 'Дополнительный обзор вопросов: Политология права',
+          extraTeacher: 'доц. Пилипенко А.А.',
+          extraRoom: '510'
+        },
+        {
+          date: '2026-11-05',
+          humanDate: '05.11.2026 (Четверг)',
+          subject: 'Уголовное право (Экзамен)',
+          teacher: 'доц. Федчук И.Л.',
+          time: '09:00–10:20',
+          oldRoom: '312',
+          newRoom: '214',
+          control: 'экз',
+          extraTime: '10:35–11:55',
+          extraSubject: 'Консультация по этнополитологии',
+          extraTeacher: 'доц. Слуцкая Л.В.',
+          extraRoom: '504'
+        }
+      ];
+      const pick = scenarios[Math.floor(Math.random() * scenarios.length)];
+      const changesList = [
+        `📍 <b>Смена аудитории (${pick.humanDate}, ${pick.time}):</b> дисциплина «<b>${pick.subject}</b>» (${pick.teacher}) перенесена из каб. <s>${pick.oldRoom}</s> ➔ в <b>каб. ${pick.newRoom}</b>.`,
+        `➕ <b>Добавлено занятие (${pick.humanDate}, ${pick.extraTime}):</b> «<b>${pick.extraSubject}</b>» (${pick.extraTeacher}), <b>каб. ${pick.extraRoom}</b>.`
+      ];
+      return {
+        title: `Объявление деканата ЮФ БГУ: обновление расписания для 4 курса заочного отд. (Политология, гр. 1Б) на ${pick.humanDate}`,
+        changesList,
+        scenario: pick
+      };
+    }
+
+    async function deleteDemoHtmlFromGithub(repo, branch, token, knownSha = null) {
+      if (!repo || !token) return false;
+      try {
+        const apiUrl = `https://api.github.com/repos/${repo}/contents/demo.html`;
+        const headers = {
+          'Accept': 'application/vnd.github.v3+json',
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        };
+        let shaToDelete = knownSha;
+        if (!shaToDelete) {
+          const checkUrl = `${apiUrl}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`;
+          const checkResp = await fetch(checkUrl, { headers, cache: 'no-store' });
+          if (checkResp.ok) {
+            const meta = await checkResp.json();
+            shaToDelete = meta && meta.sha;
+          }
+        }
+        if (!shaToDelete) return true;
+
+        const delResp = await fetch(apiUrl, {
+          method: 'DELETE',
+          headers,
+          body: JSON.stringify({
+            message: 'Авто-очистка временного демо-расписания (demo.html) v0.7',
+            sha: shaToDelete,
+            branch: branch
+          })
+        });
+        return delResp.ok;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    async function runDemoAutoUpdateTest() {
+      if (!isAdminMode) {
+        handleAdminAuthClick();
+        return;
+      }
+
+      saveGithubConfigFromInputs();
+      const repo = (GITHUB_CONFIG && GITHUB_CONFIG.repo) || detectGithubPagesRepo();
+      const branch = (GITHUB_CONFIG && GITHUB_CONFIG.branch) || 'main';
+      const token = (GITHUB_CONFIG && GITHUB_CONFIG.token) || '';
+      const savedKey = sanitizeGeminiKey(localStorage.getItem(STORAGE_KEY_API) || (document.getElementById('geminiApiKeyInput') ? document.getElementById('geminiApiKeyInput').value : ''));
+
+      const btn1 = document.getElementById('adminRunDemoBtn');
+      const btn2 = document.getElementById('modalRunDemoBtn');
+      if (btn1) { btn1.disabled = true; btn1.innerHTML = '<span>⏳ Демо-тест...</span>'; }
+      if (btn2) { btn2.disabled = true; btn2.innerHTML = '<span>⏳ Демо-тест...</span>'; }
+
+      const panel = document.getElementById('adminAutoUpdatePanel');
+      if (panel) panel.classList.remove('hidden');
+
+      try {
+        // ШАГ 1: Генерация случайного расписания в формате HTML через Gemini API
+        setBsuStatusBadge('🧪 Шаг 1/4: Генерация Gemini...', 'amber');
+        setBsuProgressUI(true, '🤖 <b>Шаг 1/4:</b> Gemini API генерирует случайное обновление расписания для 4 курса (Политология, гр. 1Б) для файла <code>demo.html</code>...', 25);
+        showSyncMessage('🧪 <b>Демо-режим (Шаг 1/4):</b> Генерируем случайное расписание через Gemini API для файла <code>demo.html</code>...');
+
+        let demoPayload = generateFallbackDemoScenario();
+
+        if (savedKey) {
+          try {
+            const prompt = `Сгенерируй реалистичное тестовое обновление расписания занятий на Юридическом факультете БГУ для 4 курса заочного отделения специальности «Политология» (группа 1Б) в период сессии 26.10.2026 – 15.11.2026.
+Придумай 2 конкретных изменения (например, перенос существующей пары в другой кабинет и добавление консультации или лекции с указанием точной даты, времени, предмета, преподавателя ЮФ БГУ и номера кабинета).
+Верни СТРОГО валидный JSON без пояснений:
+{
+  "title": "Объявление Юрфака БГУ: корректировка расписания 4 курса заочного отд. (Политология, гр. 1Б)",
+  "changesList": [
+    "📍 Смена кабинета (дата, время): Предмет (Преподаватель) перенесён из каб. X в каб. Y",
+    "➕ Добавлена пара/консультация (дата, время): Предмет (Преподаватель), каб. Z"
+  ]
+}`;
+            const aiResult = await callGeminiWithFallback(savedKey, [{ parts: [{ text: prompt }] }], true);
+            const jsonMatch = aiResult.text.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              const parsed = JSON.parse(jsonMatch[0]);
+              if (parsed.title && Array.isArray(parsed.changesList) && parsed.changesList.length > 0) {
+                demoPayload = {
+                  title: parsed.title,
+                  changesList: parsed.changesList
+                };
+              }
+            }
+          } catch (e) {
+            // Используем резервный реалистичный сценарий, если API-ключ не задан или квота исчерпана
+          }
+        }
+
+        const demoHtmlDocument = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Демо-обновление расписания Юрфака БГУ (demo.html)</title>
+</head>
+<body>
+  <h1>Юридический факультет БГУ — Заочное отделение (4 курс, Политология, группа 1Б)</h1>
+  <div id="bsu-demo-announcement" data-generated-at="${new Date().toISOString()}">
+    <h2>${escapeHtml(demoPayload.title)}</h2>
+    <ul>
+      ${demoPayload.changesList.map(c => `<li>${c}</li>`).join('\n      ')}
+    </ul>
+  </div>
+  <script id="bsu-demo-json" type="application/json">${JSON.stringify(demoPayload, null, 2)}<\/script>
+</body>
+</html>`;
+
+        // ШАГ 2: Запись demo.html в репозиторий GitHub (если указан токен и репозиторий)
+        let uploadedDemoSha = null;
+        let usedGithubRepo = false;
+
+        if (repo && token) {
+          setBsuStatusBadge('🧪 Шаг 2/4: Запись demo.html в GitHub...', 'amber');
+          setBsuProgressUI(true, `☁️ <b>Шаг 2/4:</b> Сохраняем сгенерированный файл <code>demo.html</code> в репозиторий <b>${escapeHtml(repo)}</b>...`, 45);
+          showSyncMessage(`🧪 <b>Демо-режим (Шаг 2/4):</b> Загружаем <code>demo.html</code> в репозиторий <code>${escapeHtml(repo)}</code>...`);
+
+          const apiUrl = `https://api.github.com/repos/${repo}/contents/demo.html`;
+          const headers = {
+            'Accept': 'application/vnd.github.v3+json',
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          };
+
+          let existingSha = null;
+          try {
+            const checkUrl = `${apiUrl}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`;
+          const checkResp = await fetch(checkUrl, { headers, cache: 'no-store' });
+            if (checkResp.ok) {
+              const meta = await checkResp.json();
+              existingSha = meta && meta.sha;
+            }
+          } catch (e) {}
+
+          const putBody = {
+            message: 'Демо-тест автообновления: создание временного расписания demo.html (v0.7)',
+            content: encodeUtf8Base64(demoHtmlDocument),
+            branch: branch
+          };
+          if (existingSha) putBody.sha = existingSha;
+
+          const putResp = await fetch(apiUrl, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify(putBody)
+          });
+          if (putResp.ok) {
+            const putData = await putResp.json();
+            uploadedDemoSha = putData?.content?.sha || null;
+            usedGithubRepo = true;
+          }
+        }
+
+        // ШАГ 3: Обязательная задержка с обратным отсчётом (чтобы Gemini и GitHub зафиксировали файл demo.html)
+        const delaySeconds = 4;
+        for (let remaining = delaySeconds; remaining >= 1; remaining--) {
+          const pct = 50 + Math.round(((delaySeconds - remaining + 1) / delaySeconds) * 30);
+          setBsuStatusBadge(`🧪 Ожидание (${remaining} с)...`, 'amber');
+          setBsuProgressUI(
+            true,
+            `⏳ <b>Шаг 3/4:</b> Ожидаем фиксации файла <code>demo.html</code> перед считыванием и анализом...`,
+            pct,
+            `Осталось: ${remaining} сек.`
+          );
+          await new Promise(r => setTimeout(r, 1000));
+        }
+
+        // ШАГ 4: Считывание файла demo.html из репозитория и разбор изменений
+        setBsuStatusBadge('🧪 Шаг 4/4: Чтение demo.html...', 'indigo');
+        setBsuProgressUI(true, '📖 <b>Шаг 4/4:</b> Считываем <code>demo.html</code> из репозитория и формируем отчёт об изменениях...', 92);
+
+        let readBackPayload = demoPayload;
+        if (usedGithubRepo) {
+          try {
+            const apiUrl = `https://api.github.com/repos/${repo}/contents/demo.html?ref=${encodeURIComponent(branch)}&t=${Date.now()}`;
+            const headers = {
+              'Accept': 'application/vnd.github.v3+json',
+              'Authorization': `Bearer ${token}`
+            };
+            const getResp = await fetch(apiUrl, { headers, cache: 'no-store' });
+            if (getResp.ok) {
+              const getMeta = await getResp.json();
+              if (getMeta && getMeta.sha) {
+                uploadedDemoSha = getMeta.sha;
+              }
+              if (getMeta && getMeta.content) {
+                const decodedHtml = decodeUtf8Base64(getMeta.content);
+                const jsonScriptMatch = decodedHtml.match(/<script id="bsu-demo-json"[^>]*>([\s\S]*?)<\/script>/);
+                if (jsonScriptMatch && jsonScriptMatch[1]) {
+                  readBackPayload = JSON.parse(jsonScriptMatch[1]);
+                }
+              }
+            }
+          } catch (e) {}
+        }
+
+        setBsuProgressUI(false);
+        setBsuStatusBadge('🧪 Демо: ожидает решения админа', 'amber');
+
+        showScheduleApprovalUI({
+          mode: 'demo',
+          title: readBackPayload.title,
+          changesList: readBackPayload.changesList,
+          proposedClassesPatch: {},
+          demoSha: uploadedDemoSha,
+          demoRepo: repo,
+          demoBranch: branch,
+          usedGithubRepo: usedGithubRepo
+        });
+
+        const repoNote = usedGithubRepo
+          ? `Файл <code>demo.html</code> успешно записан и считан из репозитория <b>${escapeHtml(repo)}</b>.`
+          : `Демо-файл <code>demo.html</code> обработан в локальной песочнице (укажи GitHub Token для записи в репозиторий).`;
+
+        showSyncMessage(`🧪 <b>Демо-проверка завершена!</b> ${repoNote}<br>Посмотри карточку уведомления с перечнем изменений и кнопками разрешения. Настоящее расписание не изменится, а <code>demo.html</code> будет автоматически удалён.`);
+        showToast('🧪 Демо-расписание из demo.html считано! Проверь уведомление');
+      } catch (err) {
+        setBsuProgressUI(false);
+        setBsuStatusBadge('Ошибка демо-теста', 'rose');
+        showSyncMessage(`❌ Ошибка во время демо-теста: <b>${escapeHtml(err.message)}</b>`, true);
+      } finally {
+        if (btn1) { btn1.disabled = false; btn1.innerHTML = '<span>🧪 Демо-тест (demo.html)</span>'; }
+        if (btn2) { btn2.disabled = false; btn2.innerHTML = '<span>🧪 Демо-режим (demo.html)</span>'; }
+      }
+    }
+
+    async function approvePendingScheduleUpdate() {
+      if (!pendingScheduleUpdate) return;
+      const update = pendingScheduleUpdate;
+      const card = document.getElementById('adminScheduleApprovalCard');
+
+      if (update.mode === 'demo') {
+        // В демо-режиме настоящее расписание НИКАК не изменяется, а файл demo.html удаляется из репозитория
+        setBsuProgressUI(true, '🧹 Удаляем временный файл <code>demo.html</code> из репозитория GitHub (основное расписание не затрагивается)...', 80);
+        const token = (GITHUB_CONFIG && GITHUB_CONFIG.token) || '';
+        if (update.usedGithubRepo && update.demoRepo && token) {
+          await deleteDemoHtmlFromGithub(update.demoRepo, update.demoBranch || 'main', token, update.demoSha);
+        }
+        setBsuProgressUI(false);
+        if (card) card.classList.add('hidden');
+        pendingScheduleUpdate = null;
+        setBsuStatusBadge('✅ Демо завершено (demo.html удалён)', 'emerald');
+        showSyncMessage('✅ <b>Демо-тест успешно завершён!</b> Разрешение протестировано, основное расписание группы 1Б осталось неизменным, а временный файл <code>demo.html</code> удалён из репозитория.');
+        showToast('🧪 Демо-тест завершён: demo.html удалён, база 1Б не изменена');
+        return;
+      }
+
+      // Режим реального обновления с сайта Юрфака БГУ (только с разрешения администратора!)
+      let updatedCount = 0;
+      if (update.proposedClassesPatch && typeof update.proposedClassesPatch === 'object') {
+        for (const [dateKey, dayArr] of Object.entries(update.proposedClassesPatch)) {
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateKey) && Array.isArray(dayArr)) {
+            CLASSES[dateKey] = sanitizeClassesData({ [dateKey]: dayArr })[dateKey] || dayArr;
+            updatedCount++;
+          }
+        }
+      }
+      if (Array.isArray(update.proposedExamsPatch) && update.proposedExamsPatch.length > 0) {
+        EXAMS = update.proposedExamsPatch;
+      }
+
+      const diffSummaryHtml = (update.changesList || []).join('<br>');
+      logCalendarChange('Автообновление БГУ (одобрено админом)', `<b>${escapeHtml(update.title)}</b><br>${diffSummaryHtml}`);
+      saveAllToStorage('Автообновление БГУ');
+      refreshAllViews();
+
+      if (card) card.classList.add('hidden');
+      pendingScheduleUpdate = null;
+      setBsuStatusBadge('✅ Обновлено и загружено в GitHub', 'emerald');
+      showSyncMessage(`✅ Изменения с сайта Юрфака БГУ одобрены администратором и отправлены в <code>schedule.json</code> на GitHub!`);
+      showToast('✅ Новое расписание с сайта БГУ сохранено на GitHub');
+    }
+
+    async function rejectPendingScheduleUpdate() {
+      const update = pendingScheduleUpdate;
+      const card = document.getElementById('adminScheduleApprovalCard');
+      if (card) card.classList.add('hidden');
+      pendingScheduleUpdate = null;
+
+      if (update && update.mode === 'demo') {
+        setBsuProgressUI(true, '🧹 Удаляем временный файл <code>demo.html</code> из репозитория GitHub...', 80);
+        const token = (GITHUB_CONFIG && GITHUB_CONFIG.token) || '';
+        if (update.usedGithubRepo && update.demoRepo && token) {
+          await deleteDemoHtmlFromGithub(update.demoRepo, update.demoBranch || 'main', token, update.demoSha);
+        }
+        setBsuProgressUI(false);
+        setBsuStatusBadge('Демо закрыто (demo.html удалён)', 'emerald');
+        showToast('🧪 Демо-обновление отклонено, файл demo.html удалён');
+      } else {
+        setBsuStatusBadge('Изменения отклонены админом', 'emerald');
+        showToast('ℹ️ Обновление расписания отклонено');
+      }
+    }
+
+    // Первичный запуск v0.7
     applyAdminVisibility();
     updateStorageBadge();
     updateChangelogBadge();
     selectToday();
     refreshAllViews();
     pullScheduleFromGithub(false, true); // Тихий первичный опрос без уведомлений
+    if (isAdminMode) {
+      setTimeout(() => {
+        checkBsuWebsiteSchedule(false); // Автоматическая проверка расписания на сайте БГУ при входе в админку
+      }, 1200);
+    }
 
     // Автоматические периодические таймеры
     setInterval(renderAssistantTemplate, 1000); // Секундные часы и проверка триггеров пар
