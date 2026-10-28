@@ -3,6 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <!-- PWA & МОБИЛЬНЫЙ STANDALONE-РЕЖИМ (ОТКРЫТИЕ КАК ОТДЕЛЬНОЕ ПРИЛОЖЕНИЕ) -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Расписание 1Б" />
+  <meta name="application-name" content="Расписание 1Б" />
+  <meta name="theme-color" content="#090b10" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%236366f1'/%3E%3Cstop offset='50%25' stop-color='%23a855f7'/%3E%3Cstop offset='100%25' stop-color='%23ec4899'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='24' fill='url(%23g)'/%3E%3Ctext x='50' y='63' fill='white' font-family='sans-serif' font-weight='900' font-size='42' text-anchor='middle'%3E1Б%3C/text%3E%3C/svg%3E" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%236366f1'/%3E%3Cstop offset='50%25' stop-color='%23a855f7'/%3E%3Cstop offset='100%25' stop-color='%23ec4899'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='24' fill='url(%23g)'/%3E%3Ctext x='50' y='63' fill='white' font-family='sans-serif' font-weight='900' font-size='42' text-anchor='middle'%3E1Б%3C/text%3E%3C/svg%3E" />
+  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22%D0%A0%D0%B0%D1%81%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%B8%D0%B5%201%D0%91%20%E2%80%A2%20%D0%AE%D1%80%D1%84%D0%B0%D0%BA%20%D0%91%D0%93%D0%A3%22%2C%22short_name%22%3A%22%D0%A0%D0%B0%D1%81%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%B8%D0%B5%201%D0%91%22%2C%22description%22%3A%22%D0%9A%D0%BE%D0%BE%D1%80%D0%B4%D0%B8%D0%BD%D0%B0%D1%82%D0%BE%D1%80%20%D1%81%D0%B5%D1%81%D1%81%D0%B8%D0%B8%20%D0%B8%20%D0%BF%D1%80%D0%B5%D0%BF%D0%BE%D0%B4%D0%B0%D0%B2%D0%B0%D1%82%D0%B5%D0%BB%D0%B8%20%D0%AE%D1%80%D1%84%D0%B0%D0%BA%D0%B0%20%D0%91%D0%93%D0%A3%20%D0%B4%D0%BB%D1%8F%20%D0%B3%D1%80%D1%83%D0%BF%D0%BF%D1%8B%201%D0%91%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23090b10%22%2C%22theme_color%22%3A%22%23090b10%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20100%20100'%253E%253Cdefs%253E%253ClinearGradient%20id%3D'g'%20x1%3D'0%2525'%20y1%3D'0%2525'%20x2%3D'100%2525'%20y2%3D'100%2525'%253E%253Cstop%20offset%3D'0%2525'%20stop-color%3D'%25236366f1'%2F%253E%253Cstop%20offset%3D'50%2525'%20stop-color%3D'%2523a855f7'%2F%253E%253Cstop%20offset%3D'100%2525'%20stop-color%3D'%2523ec4899'%2F%253E%253C%2FlinearGradient%253E%253C%2Fdefs%253E%253Crect%20width%3D'100'%20height%3D'100'%20rx%3D'24'%20fill%3D'url(%2523g)'%2F%253E%253Ctext%20x%3D'50'%20y%3D'63'%20fill%3D'white'%20font-family%3D'sans-serif'%20font-weight%3D'900'%20font-size%3D'42'%20text-anchor%3D'middle'%253E1%D0%91%253C%2Ftext%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22192x192%20512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D" />
   <title>Расписание 1Б • Координатор сессии и Преподаватели Юрфака БГУ v0.7</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
@@ -95,6 +105,9 @@
           <span>➕</span> <span>Событие</span>
         </button>
 
+                <button onclick="handlePwaInstallClick()" id="pwaInstallHeaderBtn" class="px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-indigo-600/30 via-purple-600/30 to-pink-600/30 hover:from-indigo-600/50 hover:to-pink-600/50 text-indigo-200 border border-indigo-500/40 transition flex items-center gap-1 shadow-sm" title="Установить как приложение на телефон">
+          <span>📱</span> <span class="hidden md:inline" id="pwaInstallBtnText">На телефон</span>
+        </button>
         <button onclick="togglePushNotifications()" id="pushBtn" class="px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-800/90 hover:bg-gray-700 text-gray-200 border border-white/10 transition flex items-center gap-1" title="Авто-уведомления">
           <span id="pushIcon">🔕</span> <span class="hidden md:inline" id="pushText">Авто-пуши</span>
         </button>
@@ -895,6 +908,66 @@
   <div id="teacherProfileModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="glass-card w-full sm:max-w-2xl rounded-t-3xl sm:rounded-2xl border-t sm:border border-white/15 p-4 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto">
       <div id="teacherModalContent" class="space-y-4"></div>
+    </div>
+  </div>
+
+
+  <!-- МОДАЛЬНОЕ ОКНО: УСТАНОВКА САЙТА КАК ПРИЛОЖЕНИЯ НА ТЕЛЕФОН (PWA) -->
+  <div id="pwaInstallModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="glass-card w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl border-t sm:border border-indigo-500/35 p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center font-extrabold text-sm text-white shadow-lg shadow-indigo-500/30">
+            1Б
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold text-white">Установка как приложение</h3>
+            <p class="text-xs text-gray-400">Открывай расписание в 1 клик с иконки на экране</p>
+          </div>
+        </div>
+        <button type="button" onclick="closePwaInstallModal()" class="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/15 text-gray-300 flex items-center justify-center text-sm">✕</button>
+      </div>
+
+      <div class="p-3 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-xs text-indigo-200 leading-relaxed">
+        ✨ <b>Работает без адресной строки и вкладок:</b> как полноценное приложение на весь экран, сохраняет всё расписание в памяти и открывается даже без интернета!
+      </div>
+
+      <!-- Кнопка быстрой установки (если поддерживается браузером автоматически) -->
+      <button type="button" onclick="triggerPwaPrompt()" id="pwaNativeInstallBtn" class="hidden w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2">
+        <span>📲</span> <span>Установить приложение прямо сейчас</span>
+      </button>
+
+      <!-- Инструкция для Android и iPhone -->
+      <div class="space-y-2.5 text-xs text-gray-200">
+        <div class="p-3 rounded-xl bg-gray-950/80 border border-white/10 space-y-1">
+          <div class="font-bold text-emerald-300 flex items-center gap-1.5">
+            <span>🤖</span> <span>Для Android (Chrome / Яндекс / Samsung):</span>
+          </div>
+          <p class="text-[11px] text-gray-300 leading-relaxed">
+            1. Нажми <b>меню из трёх точек ⋮</b> в правом верхнем углу браузера.<br>
+            2. Выбери пункт <b>«Установить приложение»</b> (или <b>«Добавить на главный экран»</b>).<br>
+            3. Нажми «Установить» — иконка «1Б» появится на рабочем столе телефона!
+          </p>
+        </div>
+
+        <div class="p-3 rounded-xl bg-gray-950/80 border border-white/10 space-y-1">
+          <div class="font-bold text-sky-300 flex items-center gap-1.5">
+            <span>🍏</span> <span>Для iPhone / iPad (Safari):</span>
+          </div>
+          <p class="text-[11px] text-gray-300 leading-relaxed">
+            1. Открой сайт в браузере <b>Safari</b>.<br>
+            2. Нажми кнопку <b>«Поделиться»</b> (квадрат со стрелкой вверх ⎋ внизу экрана).<br>
+            3. Прокрути вниз и нажми <b>«На экран "Домой"»</b> (значок с плюсом ➕).<br>
+            4. Нажми «Добавить» — сайт станет отдельным приложением без рамок Safari!
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end pt-1 border-t border-white/10">
+        <button type="button" onclick="closePwaInstallModal()" class="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold">
+          Понятно
+        </button>
+      </div>
     </div>
   </div>
 
@@ -4175,13 +4248,13 @@
       }
 
       const fileInput = document.getElementById('ghIndexFileInput');
-      const rawFile = selectedIndexHtmlFile || (fileInput && fileInput.files && fileInput.files[0]);
-      if (!rawFile) {
+      const file = selectedIndexHtmlFile || (fileInput && fileInput.files && fileInput.files[0]);
+      if (!file) {
         showSyncMessage('⚠️ Сначала выбери HTML-файл обновления на своём устройстве!', true);
         return false;
       }
 
-      const origName = selectedOriginalFileName || rawFile.name || 'index.html';
+      const origName = selectedOriginalFileName || file.name || 'index.html';
       const targetRepoFileName = 'index.html';
 
       const commitMsgInput = document.getElementById('ghIndexCommitMsg');
@@ -4882,6 +4955,84 @@ ${currentScheduleSummary}
       } else {
         setBsuStatusBadge('Изменения отклонены админом', 'emerald');
         showToast('ℹ️ Обновление расписания отклонено');
+      }
+    }
+
+
+    // ============================================================================
+    // 11. PWA STANDALONE & УСТАНОВКА НА ЭКРАН ТЕЛЕФОНА
+    // ============================================================================
+    let deferredPwaPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPwaPrompt = e;
+      const nativeBtn = document.getElementById('pwaNativeInstallBtn');
+      if (nativeBtn) nativeBtn.classList.remove('hidden');
+      const textEl = document.getElementById('pwaInstallBtnText');
+      if (textEl) textEl.textContent = 'Установить';
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredPwaPrompt = null;
+      const nativeBtn = document.getElementById('pwaNativeInstallBtn');
+      if (nativeBtn) nativeBtn.classList.add('hidden');
+      const textEl = document.getElementById('pwaInstallBtnText');
+      if (textEl) textEl.textContent = 'Установлено';
+      showToast('🎉 Приложение успешно установлено на телефон!');
+    });
+
+    function isRunningStandalone() {
+      return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+             (window.navigator && window.navigator.standalone === true);
+    }
+
+    function handlePwaInstallClick() {
+      if (isRunningStandalone()) {
+        showToast('📱 Приложение уже открыто в отдельном окне!');
+        return;
+      }
+      if (deferredPwaPrompt) {
+        triggerPwaPrompt();
+      } else {
+        openPwaInstallModal();
+      }
+    }
+
+    function openPwaInstallModal() {
+      const modal = document.getElementById('pwaInstallModal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closePwaInstallModal() {
+      const modal = document.getElementById('pwaInstallModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function triggerPwaPrompt() {
+      if (!deferredPwaPrompt) {
+        openPwaInstallModal();
+        return;
+      }
+      try {
+        deferredPwaPrompt.prompt();
+        const choice = await deferredPwaPrompt.userChoice;
+        if (choice.outcome === 'accepted') {
+          showToast('✅ Установка приложения запущена...');
+        }
+        deferredPwaPrompt = null;
+        closePwaInstallModal();
+      } catch (e) {
+        openPwaInstallModal();
+      }
+    }
+
+    // Проверка статуса запуска при загрузке
+    if (isRunningStandalone()) {
+      const btn = document.getElementById('pwaInstallHeaderBtn');
+      if (btn) {
+        btn.innerHTML = '<span>📱</span> <span class="hidden md:inline">Установлено</span>';
+        btn.className = 'px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600/25 text-emerald-200 border border-emerald-500/30 transition flex items-center gap-1 shadow-sm';
       }
     }
 
