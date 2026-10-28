@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Расписание 1Б • Координатор сессии и Преподаватели Юрфака БГУ v0.4</title>
+  <title>Расписание 1Б • Координатор сессии и Преподаватели Юрфака БГУ v0.5</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
   <script>
@@ -76,7 +76,7 @@
               Стенд 26.10
             </span>
           </div>
-          <p class="text-[10px] sm:text-[11px] text-gray-400 truncate">Минск (UTC+3) • Сессия + Смены 09–09</p>
+          <p id="headerSubtext" class="text-[10px] sm:text-[11px] text-gray-400 truncate">Минск (UTC+3) • Сессия группы 1Б</p>
         </div>
       </div>
 
@@ -91,7 +91,7 @@
           <span>👨‍🏫</span> <span class="hidden lg:inline">Преподаватели</span>
         </button>
 
-        <button onclick="openEventModal()" class="hidden sm:flex px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition items-center gap-1.5 shadow-lg shadow-indigo-600/25">
+        <button id="headerAddEventBtn" onclick="openEventModal()" class="hidden px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition items-center gap-1.5 shadow-lg shadow-indigo-600/25">
           <span>➕</span> <span>Событие</span>
         </button>
 
@@ -99,11 +99,11 @@
           <span id="pushIcon">🔕</span> <span class="hidden md:inline" id="pushText">Авто-пуши</span>
         </button>
 
-        <button onclick="openSyncModal()" class="hidden sm:flex px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600/25 hover:bg-emerald-600/40 text-emerald-200 border border-emerald-500/40 transition items-center gap-1.5 shadow-sm">
+        <button id="headerSyncBtn" onclick="openSyncModal()" class="hidden px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600/25 hover:bg-emerald-600/40 text-emerald-200 border border-emerald-500/40 transition items-center gap-1.5 shadow-sm">
           <span>🔄</span> <span class="hidden md:inline">Обновить базу</span>
         </button>
 
-        <button onclick="toggleTimeMachine()" class="px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600/25 hover:bg-indigo-600/40 text-indigo-200 border border-indigo-500/30 transition flex items-center gap-1" title="Тест времени">
+        <button id="headerTimeMachineBtn" onclick="toggleTimeMachine()" class="hidden px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600/25 hover:bg-indigo-600/40 text-indigo-200 border border-indigo-500/30 transition items-center gap-1" title="Тест времени">
           <span>🕹️</span> <span class="hidden lg:inline">Тест времени</span>
         </button>
       </div>
@@ -133,8 +133,8 @@
     <section id="sectionLiveSummary" class="glass-card rounded-2xl p-3.5 sm:p-5 border-l-4 border-l-indigo-500 shadow-xl">
       <div class="flex items-center justify-between gap-2 mb-2.5">
         <div class="flex items-center gap-2 min-w-0">
-          <span class="px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 truncate">
-            🤖 Живая сводка 1Б
+          <span class="px-3 py-1 rounded-full text-xs sm:text-sm font-extrabold uppercase tracking-wider bg-indigo-500/25 text-indigo-200 border border-indigo-400/40 shadow-sm truncate">
+            ⚡ На данный момент
           </span>
           <button onclick="toggleSummaryCollapse()" id="collapseSummaryBtn" class="sm:hidden text-[11px] text-indigo-300 underline">
             Свернуть
@@ -157,13 +157,13 @@
         <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
           <div>
             <h2 class="text-sm sm:text-lg font-bold text-white">Календарь сессии (26.10 – 15.11.2026)</h2>
-            <p class="text-[11px] sm:text-xs text-gray-400">Нажми на день для просмотра или редактирования 👇</p>
+            <p id="calSubtitleText" class="text-[11px] sm:text-xs text-gray-400">Нажми на день для просмотра расписания 👇</p>
           </div>
           <div class="flex items-center gap-1.5">
             <button onclick="selectToday()" class="px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-semibold">
               Сегодня
             </button>
-            <button onclick="openEventModal()" class="px-2.5 py-1 rounded-lg bg-emerald-600/25 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/30 text-xs font-semibold">
+            <button id="calAddEventBtn" onclick="openEventModal()" class="hidden px-2.5 py-1 rounded-lg bg-emerald-600/25 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/30 text-xs font-semibold">
               ➕ Событие
             </button>
           </div>
@@ -172,7 +172,7 @@
         <!-- Легенда -->
         <div class="flex flex-wrap items-center gap-1 sm:gap-1.5 mb-2.5 pb-2 border-b border-white/10 text-[9px] sm:text-[11px]">
           <span class="px-1.5 py-0.5 rounded badge-session font-medium">сессия ВД</span>
-          <span class="px-1.5 py-0.5 rounded badge-work24 font-medium">смена 09–09</span>
+          <span id="legendShiftBadge" class="hidden px-1.5 py-0.5 rounded badge-work24 font-medium">смена 09–09</span>
           <span class="px-1.5 py-0.5 rounded badge-zach font-semibold">ЗАЧЁТ</span>
           <span class="px-1.5 py-0.5 rounded badge-exam font-semibold">ЭКЗАМЕН</span>
           <span class="px-1.5 py-0.5 rounded badge-contest font-semibold">🏆 Событие</span>
@@ -205,8 +205,8 @@
         <!-- Быстрая горизонтальная лента дней -->
         <div id="quickDayStrip" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2.5 mb-3 border-b border-white/10"></div>
 
-        <!-- Панель быстрых кнопок добавления в выбранный день -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-3">
+        <!-- Панель быстрых кнопок добавления в выбранный день (только Админ) -->
+        <div id="dayAdminQuickActions" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-3">
           <button onclick="openEventModal('class')" class="py-1.5 px-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/35 border border-indigo-500/30 text-indigo-200 text-[11px] font-semibold flex items-center justify-center gap-1 transition active:scale-95">
             ➕ Пара
           </button>
@@ -234,7 +234,7 @@
           <button onclick="switchBottomTab('exams')" id="tabBtnExams" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 text-white transition">
             🎓 Зачёты и экзамены (<span id="examsCountLabel">7</span>)
           </button>
-          <button onclick="switchBottomTab('conflicts')" id="tabBtnConflicts" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-white/5 hover:bg-white/10 text-gray-300 transition">
+          <button onclick="switchBottomTab('conflicts')" id="tabBtnConflicts" class="hidden px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-white/5 hover:bg-white/10 text-gray-300 transition">
             ⚠️ Смены 09–09 (<span id="shiftsCountLabel">5</span>)
           </button>
           <button onclick="switchBottomTab('teachers')" id="tabBtnTeachers" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-white/5 hover:bg-white/10 text-gray-300 transition flex items-center gap-1.5">
@@ -242,7 +242,7 @@
           </button>
         </div>
         <div class="flex items-center gap-1.5">
-          <button onclick="openEventModal('exam')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-500/30 transition">
+          <button id="addExamControlBtn" onclick="openEventModal('exam')" class="hidden px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-500/30 transition">
             ➕ Добавить контроль
           </button>
         </div>
@@ -330,27 +330,31 @@
       </div>
     </section>
 
-    <!-- ФУТЕР С ВЕРСИЕЙ ПРИЛОЖЕНИЯ 0.4 -->
-    <footer class="pt-4 pb-6 text-center border-t border-white/10 text-gray-400 text-xs space-y-1">
+    <!-- ФУТЕР С ВЕРСИЕЙ ПРИЛОЖЕНИЯ 0.5 И ВХОДОМ В АДМИН-ПАНЕЛЬ -->
+    <footer class="pt-4 pb-6 text-center border-t border-white/10 text-gray-400 text-xs space-y-1.5">
       <div class="flex flex-wrap items-center justify-center gap-2">
         <span class="px-2.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-mono font-bold text-[11px]">
-          Версия приложения 0.4
+          Версия приложения 0.5
         </span>
-        <button onclick="openChangelogModal()" class="px-2.5 py-0.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-gray-200 border border-white/20 font-sans font-medium text-[11px] transition flex items-center gap-1 shadow-sm" title="История изменений в календаре">
+        <button type="button" id="adminToggleBtn" onclick="handleAdminAuthClick()" class="px-2.5 py-0.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-gray-200 border border-white/20 font-sans font-semibold text-[11px] transition flex items-center gap-1 shadow-sm" title="Вход или выход из панели администратора">
+          <span id="adminToggleIcon">🔒</span>
+          <span id="adminToggleText">Вход в админ-панель</span>
+        </button>
+        <button type="button" id="footerChangelogBtn" onclick="openChangelogModal()" class="hidden px-2.5 py-0.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-gray-200 border border-white/20 font-sans font-medium text-[11px] transition items-center gap-1 shadow-sm" title="История изменений в календаре">
           <span>📜 Лог изменений</span>
           <span id="changelogCountBadge" class="px-1.5 py-0.2 rounded-full bg-indigo-500/30 text-indigo-200 font-mono text-[10px]">0</span>
         </button>
         <span class="text-gray-500">•</span>
         <span>Координатор сессии группы 1Б (Политология)</span>
       </div>
-      <p class="text-[11px] text-gray-500">Локальное сохранение данных в браузере • Минск (UTC+3)</p>
+      <p id="footerSyncInfo" class="text-[11px] text-gray-500">Синхронизация расписания с GitHub (schedule.json) • Минск (UTC+3)</p>
     </footer>
 
   </main>
 
   <!-- МОБИЛЬНАЯ НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ -->
   <nav class="sm:hidden fixed bottom-0 inset-x-0 z-40 glass-card border-t border-white/15 px-2 pt-1.5 safe-bottom-nav">
-    <div class="grid grid-cols-6 gap-1 max-w-md mx-auto">
+    <div id="mobileBottomNavGrid" class="grid grid-cols-4 gap-1 max-w-md mx-auto">
       <button onclick="scrollToSection('sectionCalendar')" class="flex flex-col items-center justify-center py-1 rounded-xl text-gray-300 hover:text-white active:bg-white/10">
         <span class="text-base leading-none">📅</span>
         <span class="text-[9px] font-medium mt-1">Календарь</span>
@@ -359,7 +363,7 @@
         <span class="text-base leading-none">📋</span>
         <span class="text-[9px] font-medium mt-1">День</span>
       </button>
-      <button onclick="openEventModal()" class="flex flex-col items-center justify-center py-1 rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 active:scale-95">
+      <button id="mobileNavAddBtn" onclick="openEventModal()" class="hidden flex-col items-center justify-center py-1 rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 active:scale-95">
         <span class="text-base leading-none">➕</span>
         <span class="text-[9px] font-bold mt-1">Добавить</span>
       </button>
@@ -371,7 +375,7 @@
         <span class="text-base leading-none">👨‍🏫</span>
         <span class="text-[9px] font-medium mt-1">Преподав.</span>
       </button>
-      <button onclick="openSyncModal()" class="flex flex-col items-center justify-center py-1 rounded-xl text-emerald-300 hover:text-emerald-200 active:bg-white/10">
+      <button id="mobileNavSyncBtn" onclick="openSyncModal()" class="hidden flex-col items-center justify-center py-1 rounded-xl text-emerald-300 hover:text-emerald-200 active:bg-white/10">
         <span class="text-base leading-none">🔄</span>
         <span class="text-[9px] font-medium mt-1">ИИ / База</span>
       </button>
@@ -560,33 +564,83 @@
     </div>
   </div>
 
-  <!-- МОДАЛЬНОЕ ОКНО: ЦЕНТР ОБНОВЛЕНИЙ И AI-СКАНЕР GEMINI v0.4 -->
+  <!-- МОДАЛЬНОЕ ОКНО: ЦЕНТР ОБНОВЛЕНИЙ И AI-СКАНЕР GEMINI v0.5 -->
   <div id="syncModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="glass-card w-full sm:max-w-2xl rounded-t-3xl sm:rounded-2xl border-t sm:border border-white/15 p-4 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-white/10 pb-3">
         <div>
           <h3 class="text-base sm:text-lg font-extrabold text-white flex items-center gap-2">
-            🔄 Центр обновления базы 1Б (v0.4)
+            🔄 Центр обновления базы 1Б (v0.5)
           </h3>
           <p class="text-xs text-gray-400">Импорт расписания по коду или распознавание фото через Gemini API</p>
         </div>
         <button onclick="closeSyncModal()" class="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 flex items-center justify-center text-lg">✕</button>
       </div>
 
-      <!-- Переключатель Варианта 1 (AI-сканер) и Варианта 2 (JSON-код) -->
-      <div class="grid grid-cols-2 gap-2 bg-gray-950 p-1 rounded-xl border border-white/10">
-        <button onclick="switchSyncTab('ai')" id="syncTabAiBtn" class="py-2 px-3 rounded-lg text-xs font-bold bg-purple-600 text-white transition">
+      <!-- Переключатель: GitHub-файл, AI-сканер и JSON-код -->
+      <div class="grid grid-cols-3 gap-1.5 bg-gray-950 p-1 rounded-xl border border-white/10">
+        <button type="button" onclick="switchSyncTab('github')" id="syncTabGithubBtn" class="py-2 px-2 rounded-lg text-[11px] sm:text-xs font-bold bg-emerald-600 text-white transition">
+          🐙 Файл на GitHub
+        </button>
+        <button type="button" onclick="switchSyncTab('ai')" id="syncTabAiBtn" class="py-2 px-2 rounded-lg text-[11px] sm:text-xs font-bold text-gray-400 hover:text-white transition">
           📸 AI-сканер по фото (Gemini)
         </button>
-        <button onclick="switchSyncTab('json')" id="syncTabJsonBtn" class="py-2 px-3 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition">
+        <button type="button" onclick="switchSyncTab('json')" id="syncTabJsonBtn" class="py-2 px-2 rounded-lg text-[11px] sm:text-xs font-bold text-gray-400 hover:text-white transition">
           📋 JSON-код / Сброс базы
         </button>
       </div>
 
+      <!-- ВАРИАНТ 0: ХРАНЕНИЕ И АВТО-ОБНОВЛЕНИЕ ОТДЕЛЬНОГО ФАЙЛА SCHEDULE.JSON НА GITHUB -->
+      <div id="syncTabGithubBody" class="space-y-3.5">
+        <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-200 leading-relaxed space-y-1">
+          <div>🐙 <b>Хранение расписания в отдельном файле <code>schedule.json</code> на GitHub:</b></div>
+          <div class="text-[11px] text-gray-300">
+            При открытии сайта приложение автоматически читает файл <code>schedule.json</code> из репозитория. Если указать ниже параметры репозитория и GitHub Token (с правом <code>repo</code> или <code>contents:write</code>), то <b>при любом изменении расписания в админ-панели файл <code>schedule.json</code> на GitHub обновляется автоматически!</b>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-gray-300 mb-1">Репозиторий GitHub (<code>владелец/репозиторий</code>):</label>
+            <input type="text" id="ghRepoInput" oninput="saveGithubConfigFromInputs()" placeholder="Например: ivanov/raspisanie-1b" class="w-full rounded-xl bg-gray-950 border border-white/15 px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-300 mb-1">Ветка (branch):</label>
+            <input type="text" id="ghBranchInput" oninput="saveGithubConfigFromInputs()" value="main" placeholder="main" class="w-full rounded-xl bg-gray-950 border border-white/15 px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold text-gray-300 mb-1">Путь к файлу в репо:</label>
+            <input type="text" id="ghPathInput" oninput="saveGithubConfigFromInputs()" value="schedule.json" placeholder="schedule.json" class="w-full rounded-xl bg-gray-950 border border-white/15 px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-gray-300 mb-1">GitHub Personal Access Token (для авто-записи):</label>
+            <div class="relative">
+              <input type="password" id="ghTokenInput" oninput="saveGithubConfigFromInputs()" placeholder="ghp_... или github_pat_..." autocomplete="off" spellcheck="false" class="w-full rounded-xl bg-gray-950 border border-white/15 pl-3 pr-9 py-2 text-xs font-mono text-white focus:outline-none focus:border-emerald-500" />
+              <button type="button" onclick="toggleGhTokenVisibility()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-sm" title="Показать/скрыть токен">👁️</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 pt-1">
+          <button type="button" onclick="pushScheduleToGithub('Ручная синхронизация', true)" id="ghPushBtn" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/20 flex items-center gap-1.5">
+            <span>☁️ Обновить schedule.json на GitHub</span>
+          </button>
+          <button type="button" onclick="pullScheduleFromGithub(true)" id="ghPullBtn" class="px-3.5 py-2.5 rounded-xl bg-indigo-600/25 hover:bg-indigo-600/40 text-indigo-200 border border-indigo-500/35 text-xs font-bold transition flex items-center gap-1.5">
+            <span>📥 Загрузить из GitHub</span>
+          </button>
+          <button type="button" onclick="downloadScheduleJsonFile()" class="px-3.5 py-2.5 rounded-xl bg-white/5 hover:bg-white/15 text-gray-200 border border-white/10 text-xs font-semibold transition flex items-center gap-1.5">
+            <span>💾 Скачать schedule.json</span>
+          </button>
+        </div>
+      </div>
+
       <!-- ВАРИАНТ 1: АВТО-ПОДБОР МОДЕЛИ GEMINI + СКАНЕР ФОТО -->
-      <div id="syncTabAiBody" class="space-y-3.5">
+      <div id="syncTabAiBody" class="hidden space-y-3.5">
         <div class="p-3 rounded-xl bg-purple-500/10 border border-purple-500/30 text-xs text-purple-200 leading-relaxed">
-          ✨ <b>Умное подключение Gemini v0.4:</b> приложение само запрашивает у Google список всех моделей, доступных на твоём ключе, и автоматически переключается на свободную модель, если основной сервер перегружен.
+          ✨ <b>Умное подключение Gemini v0.5:</b> приложение само запрашивает у Google список всех моделей, доступных на твоём ключе, и автоматически переключается на свободную модель, если основной сервер перегружен.
         </div>
 
         <div class="space-y-1.5">
@@ -681,6 +735,46 @@
   <div id="teacherProfileModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="glass-card w-full sm:max-w-2xl rounded-t-3xl sm:rounded-2xl border-t sm:border border-white/15 p-4 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto">
       <div id="teacherModalContent" class="space-y-4"></div>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО: ВХОД В АДМИН-ПАНЕЛЬ (ПАРОЛЬ 4778) -->
+  <div id="adminPasswordModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card w-full max-w-sm rounded-2xl border border-indigo-500/35 p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center justify-center text-sm">🔐</span>
+          <div>
+            <h3 class="text-sm sm:text-base font-extrabold text-white">Вход в админ-панель</h3>
+            <p class="text-[11px] text-gray-400">Доступ к редактированию, сменам и базе</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeAdminPasswordModal()" class="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/15 text-gray-300 flex items-center justify-center text-sm">✕</button>
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-gray-300">Введи пароль администратора:</label>
+        <input
+          type="password"
+          id="adminPasswordInput"
+          inputmode="numeric"
+          placeholder="••••"
+          onkeydown="if(event.key==='Enter') submitAdminPassword()"
+          class="w-full rounded-xl bg-gray-950 border border-white/15 px-3.5 py-2.5 text-center font-mono text-base tracking-widest text-white focus:outline-none focus:border-indigo-500"
+        />
+        <div id="adminPasswordError" class="hidden text-xs text-rose-400 font-semibold text-center">
+          ❌ Неверный пароль! Попробуй ещё раз.
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-1">
+        <button type="button" onclick="closeAdminPasswordModal()" class="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-semibold">
+          Отмена
+        </button>
+        <button type="button" onclick="submitAdminPassword()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/25 transition">
+          🔓 Войти
+        </button>
+      </div>
     </div>
   </div>
 
@@ -840,14 +934,46 @@
     let currentEventTab = 'class';
     let editingState = null;
 
+    // Режим администратора (пароль 4778) и конфигурация файла schedule.json на GitHub
+    const ADMIN_PASSWORD_CODE = '4778';
+    const STORAGE_KEY_ADMIN_SESSION = 'raspisanie_1b_admin_active_v05';
+    const STORAGE_KEY_GH_CONFIG = 'raspisanie_1b_github_config_v05';
+
+    let isAdminMode = false;
+    try {
+      isAdminMode = sessionStorage.getItem(STORAGE_KEY_ADMIN_SESSION) === '1' ||
+                    localStorage.getItem(STORAGE_KEY_ADMIN_SESSION) === '1';
+    } catch (e) {}
+
+    let GITHUB_CONFIG = loadParsedStorage(STORAGE_KEY_GH_CONFIG, {
+      repo: '',
+      branch: 'main',
+      path: 'schedule.json',
+      token: ''
+    });
+
+    function formatExamNoteForView(noteStr) {
+      if (isAdminMode) return noteStr || '';
+      if (!noteStr) return '';
+      if (noteStr.includes('смен') || noteStr.includes('КОНКУРС')) {
+        return 'По расписанию экзаменационной сессии группы 1Б';
+      }
+      return noteStr;
+    }
+
     function saveAllToStorage(label = 'Изменено') {
-      localStorage.setItem(STORAGE_KEY_CLASSES, JSON.stringify(CLASSES));
-      localStorage.setItem(STORAGE_KEY_EXAMS, JSON.stringify(EXAMS));
-      localStorage.setItem(STORAGE_KEY_SHIFTS, JSON.stringify(WORK_SHIFTS_24H));
-      localStorage.setItem(STORAGE_KEY_NOTES, JSON.stringify(PERSONAL_NOTES));
-      const stamp = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-      localStorage.setItem(STORAGE_KEY_STAMP, `${label} ${stamp}`);
+      try {
+        localStorage.setItem(STORAGE_KEY_CLASSES, JSON.stringify(CLASSES));
+        localStorage.setItem(STORAGE_KEY_EXAMS, JSON.stringify(EXAMS));
+        localStorage.setItem(STORAGE_KEY_SHIFTS, JSON.stringify(WORK_SHIFTS_24H));
+        localStorage.setItem(STORAGE_KEY_NOTES, JSON.stringify(PERSONAL_NOTES));
+        const stamp = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        localStorage.setItem(STORAGE_KEY_STAMP, `${label} ${stamp}`);
+      } catch (e) {}
       updateStorageBadge();
+      if (GITHUB_CONFIG && GITHUB_CONFIG.repo && GITHUB_CONFIG.token) {
+        pushScheduleToGithub(label, false);
+      }
     }
 
     function showToast(message, isError = false) {
@@ -1285,32 +1411,88 @@
         }
       }
 
-      let line1 = '';
-      let line2 = '';
+      let nowHeroHtml = '';
 
       if (activeClass) {
         const left = timeToMin(activeClass.end) - curMin;
-        line1 = `Сейчас <b>${curTimeStr}</b>, пара закончится через <b>${formatMinDiff(left)}</b> в <b>${activeClass.end.replace(':','.')}</b>`;
-        line2 = `Идёт пара по <b>${activeClass.subject} (${activeClass.control})</b> в Каб <b>${activeClass.room}</b>. Преподаватель <b>${activeClass.teacher}</b>`;
+        nowHeroHtml = `
+          <div class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-indigo-900/80 via-emerald-950/75 to-gray-900 border-2 border-emerald-400/60 shadow-lg shadow-emerald-500/10 space-y-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold uppercase tracking-wider bg-emerald-500/25 text-emerald-200 border border-emerald-400/50">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>🟢 Сейчас идёт пара</span>
+              </span>
+              <span class="font-mono text-xs sm:text-sm font-bold text-emerald-300 bg-black/40 px-2.5 py-0.5 rounded-lg border border-emerald-500/30">
+                ⏱️ До конца: ${formatMinDiff(left)} (в ${activeClass.end.replace(':','.')})
+              </span>
+            </div>
+            <div class="text-sm sm:text-lg font-extrabold text-white leading-snug">
+              📚 ${activeClass.subject} <span class="text-xs sm:text-sm font-bold text-indigo-300 uppercase">(${activeClass.control})</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-200">
+              <span class="px-2.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-200 border border-emerald-400/40 font-mono font-bold">
+                🚪 Каб ${activeClass.room}
+              </span>
+              <span>👨‍🏫 Преподаватель: <b class="text-white">${activeClass.teacher}</b></span>
+              <span class="text-xs text-gray-400 font-mono ml-auto">Сейчас ${curTimeStr}</span>
+            </div>
+          </div>
+        `;
       } else if (nextClass) {
         const wait = timeToMin(nextClass.start) - curMin;
-        line1 = `Сейчас <b>${curTimeStr}</b>, идёт перерыв — следующая пара начнётся через <b>${formatMinDiff(wait)}</b> в <b>${nextClass.start.replace(':','.')}</b> (закончится в <b>${nextClass.end.replace(':','.')}</b>)`;
-        line2 = `Идёт пара по: Сейчас перерыв. Готовимся к дисциплине <b>${nextClass.subject} (${nextClass.control})</b> в Каб <b>${nextClass.room}</b>. Преподаватель <b>${nextClass.teacher}</b>`;
+        nowHeroHtml = `
+          <div class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-indigo-950/90 via-purple-950/75 to-gray-900 border-2 border-indigo-400/60 shadow-lg shadow-indigo-500/10 space-y-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold uppercase tracking-wider bg-amber-500/25 text-amber-200 border border-amber-400/50">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                <span>⏳ Сейчас перерыв / ожидание пары</span>
+              </span>
+              <span class="font-mono text-xs sm:text-sm font-bold text-indigo-200 bg-black/40 px-2.5 py-0.5 rounded-lg border border-indigo-400/40">
+                🔔 Начало через ${formatMinDiff(wait)} (${nextClass.start.replace(':','.')}–${nextClass.end.replace(':','.')})
+              </span>
+            </div>
+            <div class="text-sm sm:text-lg font-extrabold text-white leading-snug">
+              Готовимся к паре: <span class="text-indigo-200">${nextClass.subject}</span> <span class="text-xs sm:text-sm font-bold text-purple-300 uppercase">(${nextClass.control})</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-200">
+              <span class="px-2.5 py-0.5 rounded-lg bg-indigo-500/25 text-indigo-200 border border-indigo-400/40 font-mono font-bold">
+                🚪 Каб ${nextClass.room}
+              </span>
+              <span>👨‍🏫 Преподаватель: <b class="text-white">${nextClass.teacher}</b></span>
+              <span class="text-xs text-gray-400 font-mono ml-auto">Сейчас ${curTimeStr}</span>
+            </div>
+          </div>
+        `;
       } else {
-        line1 = `Сейчас <b>${curTimeStr}</b> (${toRuShortDate(todayIso)}, ${DAYS_FULL[now.getDay()]}) — учебные пары на сегодня завершены (перерыв до следующего учебного дня).`;
-        line2 = `Идёт пара по: Сейчас пар нет — время отдыхать и перезагружаться!`;
+        nowHeroHtml = `
+          <div class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/60 to-slate-900 border-2 border-indigo-500/45 shadow-md space-y-1.5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold uppercase tracking-wider bg-indigo-500/25 text-indigo-200 border border-indigo-400/40">
+                <span>✨ На данный момент пар нет</span>
+              </span>
+              <span class="font-mono text-xs sm:text-sm font-bold text-indigo-300">
+                🕒 Сейчас ${curTimeStr} (${toRuShortDate(todayIso)}, ${DAYS_FULL[now.getDay()]})
+              </span>
+            </div>
+            <div class="text-sm sm:text-base font-extrabold text-white">
+              Учебные пары на сегодня завершены — время отдыхать и готовиться к следующему учебному дню!
+            </div>
+          </div>
+        `;
       }
 
       let shiftBanner = '';
-      todayNotes.forEach(n => {
-        if (n.color === 'contest') {
-          shiftBanner += `<div class="px-3 py-1.5 rounded-lg badge-contest text-xs font-semibold">🏆 Сегодня (${toRuShortDate(todayIso)}): ${n.label}</div>`;
+      if (isAdminMode) {
+        todayNotes.forEach(n => {
+          if (n.color === 'contest') {
+            shiftBanner += `<div class="px-3 py-1.5 rounded-lg badge-contest text-xs font-semibold">🏆 Сегодня (${toRuShortDate(todayIso)}): ${n.label}</div>`;
+          }
+        });
+        if (shiftToday.startsAt9) {
+          shiftBanner += `<div class="px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs">🛠️ <b>График смен:</b> Сегодня в <b>09:00</b> началась твоя суточная смена (до 09:00 завтрашнего дня).</div>`;
+        } else if (shiftToday.endsAt9) {
+          shiftBanner += `<div class="px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs">🛠️ <b>График смен:</b> Сегодня в <b>09:00</b> утра завершилась твоя суточная смена.</div>`;
         }
-      });
-      if (shiftToday.startsAt9) {
-        shiftBanner += `<div class="px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs">🛠️ <b>График смен:</b> Сегодня в <b>09:00</b> началась твоя суточная смена (до 09:00 завтрашнего дня).</div>`;
-      } else if (shiftToday.endsAt9) {
-        shiftBanner += `<div class="px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs">🛠️ <b>График смен:</b> Сегодня в <b>09:00</b> утра завершилась твоя суточная смена.</div>`;
       }
 
       let remHtml = '';
@@ -1329,21 +1511,24 @@
 
       let tmrwExamLine = '';
       if (tmrwExams.length > 0) {
-        tmrwExamLine = tmrwExams.map(ex =>
-          `<div class="p-2 rounded-lg bg-rose-500/15 border border-rose-500/40 text-rose-200 text-xs font-medium">⚠️ <b>Экзамен/Зачет!</b> <b>${ex.time}</b> — <b>${ex.subject} (${ex.type})</b>, Каб <b>${ex.room}</b>, Преподаватель <b>${ex.teacher}</b>. <span class="text-amber-300">${ex.note}</span></div>`
-        ).join('');
+        tmrwExamLine = tmrwExams.map(ex => {
+          const noteText = formatExamNoteForView(ex.note);
+          return `<div class="p-2 rounded-lg bg-rose-500/15 border border-rose-500/40 text-rose-200 text-xs font-medium">⚠️ <b>Экзамен/Зачет!</b> <b>${ex.time}</b> — <b>${ex.subject} (${ex.type})</b>, Каб <b>${ex.room}</b>, Преподаватель <b>${ex.teacher}</b>.${noteText ? ` <span class="text-amber-300">${noteText}</span>` : ''}</div>`;
+        }).join('');
       } else {
         tmrwExamLine = `<div class="text-xs text-gray-300">⚠️ <b>Экзамен/Зачет! (если есть):</b> Событий контроля на завтра нет.</div>`;
       }
 
       let tmrwExtraAlert = '';
-      tmrwNotes.forEach(n => {
-        tmrwExtraAlert += `<div class="text-xs text-fuchsia-300 font-semibold">📌 Событие на завтра: ${n.label}</div>`;
-      });
-      if (tmrwShift.startsAt9) {
-        tmrwExtraAlert += `<div class="text-xs text-amber-300 font-medium">🛠️ Завтра с <b>09:00</b> заступаешь на суточную смену (до 09:00 следующего дня).</div>`;
-      } else if (tmrwShift.endsAt9) {
-        tmrwExtraAlert += `<div class="text-xs text-amber-300 font-medium">🛠️ Завтра в <b>09:00</b> утра заканчивается твоя суточная смена.</div>`;
+      if (isAdminMode) {
+        tmrwNotes.forEach(n => {
+          tmrwExtraAlert += `<div class="text-xs text-fuchsia-300 font-semibold">📌 Событие на завтра: ${n.label}</div>`;
+        });
+        if (tmrwShift.startsAt9) {
+          tmrwExtraAlert += `<div class="text-xs text-amber-300 font-medium">🛠️ Завтра с <b>09:00</b> заступаешь на суточную смену (до 09:00 следующего дня).</div>`;
+        } else if (tmrwShift.endsAt9) {
+          tmrwExtraAlert += `<div class="text-xs text-amber-300 font-medium">🛠️ Завтра в <b>09:00</b> утра заканчивается твоя суточная смена.</div>`;
+        }
       }
 
       let tmrwClassesHtml = '';
@@ -1357,8 +1542,7 @@
 
       document.getElementById('assistantReportBox').innerHTML = `
         ${shiftBanner}
-        <div>${line1}</div>
-        <div>${line2}</div>
+        ${nowHeroHtml}
         <div class="pt-2 border-t border-white/10">
           <div class="font-bold text-indigo-300 text-xs uppercase tracking-wider">Следующие пары на сегодня (${toRuShortDate(todayIso)}):</div>
           ${remHtml}
@@ -1395,10 +1579,12 @@
 
         let badges = `<div class="hidden sm:block text-[9px] sm:text-[10px] px-1 py-0.5 rounded badge-session font-semibold text-center leading-tight truncate">сессия ВД</div>`;
 
-        if (shift.startsAt9) {
-          badges += `<div class="text-[8px] sm:text-[10px] px-1 py-0.5 rounded badge-work24 font-bold text-center leading-tight truncate"><span class="sm:hidden">🛠️09</span><span class="hidden sm:inline">работа 09:00</span></div>`;
-        } else if (shift.endsAt9) {
-          badges += `<div class="text-[8px] sm:text-[9px] px-1 py-0.5 rounded bg-amber-500/10 text-amber-300/90 border border-amber-500/20 text-center leading-tight truncate"><span class="sm:hidden">до 09</span><span class="hidden sm:inline">смена до 09:00</span></div>`;
+        if (isAdminMode) {
+          if (shift.startsAt9) {
+            badges += `<div class="text-[8px] sm:text-[10px] px-1 py-0.5 rounded badge-work24 font-bold text-center leading-tight truncate"><span class="sm:hidden">🛠️09</span><span class="hidden sm:inline">работа 09:00</span></div>`;
+          } else if (shift.endsAt9) {
+            badges += `<div class="text-[8px] sm:text-[9px] px-1 py-0.5 rounded bg-amber-500/10 text-amber-300/90 border border-amber-500/20 text-center leading-tight truncate"><span class="sm:hidden">до 09</span><span class="hidden sm:inline">смена до 09:00</span></div>`;
+          }
         }
 
         dayExams.forEach(ex => {
@@ -1406,16 +1592,18 @@
           badges += `<div class="text-[8px] sm:text-[10px] px-1 py-0.5 rounded ${cls} font-bold text-center leading-tight truncate">⚠️ ${ex.type.toUpperCase()} <span class="hidden sm:inline">${ex.time}</span></div>`;
         });
 
-        notes.forEach(n => {
-          if (n.color === 'contest') {
-            badges += `<div class="text-[8px] sm:text-[10px] px-1 py-0.5 rounded badge-contest font-bold text-center leading-tight truncate">🏆 <span class="hidden sm:inline">${n.label}</span></div>`;
-          } else {
-            const colorCls = n.color === 'emerald'
-              ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-              : 'bg-sky-500/15 text-sky-300 border-sky-500/30';
-            badges += `<div class="text-[8px] sm:text-[9px] px-1 py-0.5 rounded ${colorCls} border text-center leading-tight truncate">${n.label}</div>`;
-          }
-        });
+        if (isAdminMode) {
+          notes.forEach(n => {
+            if (n.color === 'contest') {
+              badges += `<div class="text-[8px] sm:text-[10px] px-1 py-0.5 rounded badge-contest font-bold text-center leading-tight truncate">🏆 <span class="hidden sm:inline">${n.label}</span></div>`;
+            } else {
+              const colorCls = n.color === 'emerald'
+                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                : 'bg-sky-500/15 text-sky-300 border-sky-500/30';
+              badges += `<div class="text-[8px] sm:text-[9px] px-1 py-0.5 rounded ${colorCls} border text-center leading-tight truncate">${n.label}</div>`;
+            }
+          });
+        }
 
         if (dayClasses.length > 0) {
           const firstStart = dayClasses[0].start.replace(':','.');
@@ -1447,7 +1635,7 @@
         const dow = DAYS_SHORT[dObj.getDay()];
         const isSel = iso === selectedIso;
         const hasExam = EXAMS.some(e => e.date === iso);
-        const hasNote = (PERSONAL_NOTES[iso] || []).length > 0;
+        const hasNote = isAdminMode && (PERSONAL_NOTES[iso] || []).length > 0;
 
         return `
           <button onclick="selectDay('${iso}')" id="stripDay_${iso}" class="shrink-0 px-2.5 py-1.5 rounded-xl border text-center transition ${isSel ? 'bg-indigo-600 text-white border-indigo-400 font-bold' : 'bg-gray-900/80 text-gray-300 border-white/10 hover:bg-gray-800'}">
@@ -1486,7 +1674,7 @@
       let html = '';
 
       html += `
-        <div class="grid grid-cols-3 gap-2 text-center">
+        <div class="grid ${isAdminMode ? 'grid-cols-3' : 'grid-cols-2'} gap-2 text-center">
           <div class="p-2 rounded-xl bg-gray-900/90 border border-white/10">
             <div class="text-[10px] text-gray-400 uppercase">Пар за день</div>
             <div class="text-sm font-extrabold text-indigo-300 mt-0.5">${dayClasses.length}</div>
@@ -1497,16 +1685,18 @@
               ${dayExams.length ? dayExams[0].label : 'Нет'}
             </div>
           </div>
+          ${isAdminMode ? `
           <div class="p-2 rounded-xl bg-gray-900/90 border border-white/10">
             <div class="text-[10px] text-gray-400 uppercase">Смена 09–09</div>
             <div class="text-xs font-bold text-amber-300 mt-1">
               ${shift.startsAt9 ? 'Старт 09:00' : (shift.endsAt9 ? 'Конец 09:00' : 'Выходной')}
             </div>
           </div>
+          ` : ''}
         </div>
       `;
 
-      if (notes.length > 0) {
+      if (isAdminMode && notes.length > 0) {
         notes.forEach((n, noteIdx) => {
           if (n.color === 'contest') {
             html += `
@@ -1536,7 +1726,7 @@
         });
       }
 
-      if (shift.startsAt9 || shift.endsAt9) {
+      if (isAdminMode && (shift.startsAt9 || shift.endsAt9)) {
         html += `
           <div class="p-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-200 text-xs space-y-1">
             <div class="font-bold flex items-center justify-between gap-2">
@@ -1557,10 +1747,12 @@
       if (dayExams.length > 0) {
         dayExams.forEach(ex => {
           const isExam = ex.type === 'экз';
+          const examNoteView = formatExamNoteForView(ex.note);
           html += `
             <div class="p-3.5 rounded-xl ${isExam ? 'badge-exam' : 'badge-zach'} space-y-1.5">
               <div class="flex items-center justify-between gap-2">
                 <span class="text-[11px] font-mono uppercase font-extrabold px-2 py-0.5 rounded bg-black/30">⚠️ ${ex.label} (${ex.type}) • ⏰ ${ex.time}</span>
+                ${isAdminMode ? `
                 <div class="flex items-center gap-1">
                   <button onclick='openEventModal("exam", {type:"exam", index:${ex.globalIdx}})' class="px-2 py-1 rounded-lg bg-black/30 hover:bg-white/20 text-white text-xs transition" title="Редактировать">
                     ✏️
@@ -1569,6 +1761,7 @@
                     🗑️
                   </button>
                 </div>
+                ` : ''}
               </div>
               <div class="font-bold text-sm sm:text-base text-white">${ex.subject}</div>
               <div class="text-xs opacity-95 flex flex-wrap items-center gap-1">
@@ -1576,7 +1769,7 @@
                 <button type="button" onclick='openTeacherByScheduleName(${JSON.stringify(ex.teacher)})' class="font-bold underline decoration-white/40 hover:text-indigo-200 transition">${ex.teacher} ℹ️</button>
                 <span>• Каб: <b>${ex.room}</b></span>
               </div>
-              <div class="text-[11px] pt-0.5 text-amber-200 font-medium">${ex.note}</div>
+              ${examNoteView ? `<div class="text-[11px] pt-0.5 text-amber-200 font-medium">${examNoteView}</div>` : ''}
             </div>
           `;
         });
@@ -1598,12 +1791,14 @@
                   <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
                     Каб ${c.room}
                   </span>
+                  ${isAdminMode ? `
                   <button onclick='openEventModal("class", {type:"class", iso:"${selectedIso}", index:${idx}})' class="px-2 py-0.5 rounded-lg bg-white/5 hover:bg-white/15 text-gray-300 text-xs transition" title="Редактировать пару">
                     ✏️
                   </button>
                   <button onclick="deleteClassEvent('${selectedIso}', ${idx})" class="px-2 py-0.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/35 text-rose-300 text-xs transition" title="Удалить пару">
                     🗑️
                   </button>
+                  ` : ''}
                 </div>
               </div>
               <div class="font-bold text-xs sm:text-sm text-white flex flex-wrap items-center gap-1.5">
@@ -1627,7 +1822,7 @@
           <div class="p-5 rounded-xl bg-gray-900/60 border border-white/5 text-center space-y-2">
             <div class="text-2xl">☕</div>
             <div class="text-sm font-bold text-gray-200">Учебных пар в этот день нет</div>
-            <div class="text-xs text-gray-400">Можно отдыхать или нажать «➕ Пара» выше, чтобы добавить занятие.</div>
+            <div class="text-xs text-gray-400">${isAdminMode ? 'Можно отдыхать или нажать «➕ Пара» выше, чтобы добавить занятие.' : 'В этот день занятий по расписанию нет — можно отдыхать и готовиться к сессии.'}</div>
           </div>
         `;
       }
@@ -1645,6 +1840,7 @@
       } else {
         examsBox.innerHTML = EXAMS.map((ex, idx) => {
           const isEx = ex.type === 'экз';
+          const noteView = formatExamNoteForView(ex.note);
           return `
             <div class="p-3.5 rounded-xl bg-gray-900/80 border ${isEx ? 'border-rose-500/40 hover:border-rose-400' : 'border-purple-500/40 hover:border-purple-400'} transition flex flex-col justify-between gap-2">
               <div>
@@ -1652,8 +1848,10 @@
                   <span onclick="selectDay('${ex.date}')" class="cursor-pointer font-mono text-xs font-bold text-white bg-white/10 hover:bg-white/20 px-2 py-0.5 rounded">${toRuShortDate(ex.date)} • ${ex.time}</span>
                   <div class="flex items-center gap-1">
                     <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded ${isEx ? 'badge-exam' : 'badge-zach'}">${ex.label}</span>
+                    ${isAdminMode ? `
                     <button onclick='openEventModal("exam", {type:"exam", index:${idx}})' class="px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/15 text-xs" title="Редактировать">✏️</button>
                     <button onclick="deleteExamEvent(${idx})" class="px-1.5 py-0.5 rounded bg-rose-500/15 hover:bg-rose-500/35 text-rose-300 text-xs" title="Удалить">🗑️</button>
+                    ` : ''}
                   </div>
                 </div>
                 <div onclick="selectDay('${ex.date}')" class="cursor-pointer font-bold text-sm text-white hover:text-indigo-300 transition">${ex.subject}</div>
@@ -1662,9 +1860,11 @@
                   <span>• Каб: ${ex.room}</span>
                 </div>
               </div>
+              ${noteView ? `
               <div class="text-[11px] text-amber-300 bg-amber-500/10 px-2.5 py-1.5 rounded-lg border border-amber-500/20">
-                ${ex.note}
+                ${noteView}
               </div>
+              ` : ''}
             </div>
           `;
         }).join('');
@@ -1852,9 +2052,14 @@
     }
 
     function openSyncModal() {
+      if (!isAdminMode) {
+        handleAdminAuthClick();
+        return;
+      }
       document.getElementById('syncModal').classList.remove('hidden');
       const savedKey = localStorage.getItem(STORAGE_KEY_API) || '';
       document.getElementById('geminiApiKeyInput').value = savedKey;
+      populateGithubInputs();
     }
 
     function closeSyncModal() {
@@ -1863,15 +2068,27 @@
     }
 
     function switchSyncTab(tab) {
+      const isGh = tab === 'github';
+      const isAi = tab === 'ai';
       const isJson = tab === 'json';
+
+      const ghBody = document.getElementById('syncTabGithubBody');
+      if (ghBody) ghBody.classList.toggle('hidden', !isGh);
+      document.getElementById('syncTabAiBody').classList.toggle('hidden', !isAi);
       document.getElementById('syncTabJsonBody').classList.toggle('hidden', !isJson);
-      document.getElementById('syncTabAiBody').classList.toggle('hidden', isJson);
+
+      const ghBtn = document.getElementById('syncTabGithubBtn');
+      if (ghBtn) {
+        ghBtn.className = isGh
+          ? 'py-2 px-2 rounded-lg text-[11px] sm:text-xs font-bold bg-emerald-600 text-white transition'
+          : 'py-2 px-2 rounded-lg text-[11px] sm:text-xs font-bold text-gray-400 hover:text-white transition';
+      }
+      document.getElementById('syncTabAiBtn').className = isAi
+        ? 'py-2 px-2 rounded-lg text-[11px] sm:text-xs font-bold bg-purple-600 text-white transition'
+        : 'py-2 px-2 rounded-lg text-[11px] sm:text-xs font-bold text-gray-400 hover:text-white transition';
       document.getElementById('syncTabJsonBtn').className = isJson
-        ? 'py-2 px-3 rounded-lg text-xs font-bold bg-indigo-600 text-white transition'
-        : 'py-2 px-3 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition';
-      document.getElementById('syncTabAiBtn').className = !isJson
-        ? 'py-2 px-3 rounded-lg text-xs font-bold bg-purple-600 text-white transition'
-        : 'py-2 px-3 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition';
+        ? 'py-2 px-2 rounded-lg text-[11px] sm:text-xs font-bold bg-indigo-600 text-white transition'
+        : 'py-2 px-2 rounded-lg text-[11px] sm:text-xs font-bold text-gray-400 hover:text-white transition';
     }
 
     function showSyncMessage(text, isError = false) {
@@ -2997,16 +3214,19 @@
         : `<div class="text-xs text-gray-400 py-2">Учебных пар в текущем окне расписания не найдено.</div>`;
 
       const examsHtml = stats.exams.length > 0
-        ? stats.exams.map(ex => `
+        ? stats.exams.map(ex => {
+            const noteText = formatExamNoteForView(ex.note);
+            return `
             <div onclick="closeTeacherModal(); selectDay('${ex.date}'); scrollToSection('sectionDayDetail');" class="cursor-pointer p-3 rounded-xl ${ex.type === 'экз' ? 'badge-exam' : 'badge-zach'} flex items-center justify-between gap-2">
               <div>
                 <div class="text-xs font-extrabold uppercase">⚠️ ${ex.label} НА ЭТОЙ СЕССИИ • ${toRuShortDate(ex.date)} в ${ex.time}</div>
                 <div class="text-xs mt-0.5">${ex.subject} • Каб: <b>${ex.room}</b></div>
-                <div class="text-[11px] text-amber-200 mt-0.5">${ex.note}</div>
+                ${noteText ? `<div class="text-[11px] text-amber-200 mt-0.5">${noteText}</div>` : ''}
               </div>
               <span class="text-xs font-bold underline shrink-0">К дате →</span>
             </div>
-          `).join('')
+          `;
+          }).join('')
         : `
           <div class="p-3 rounded-xl bg-sky-500/10 border border-sky-500/30 text-xs text-sky-200">
             ℹ️ <b>Статус на текущей сессии (26.10 – 15.11.2026):</b> в ведомости сдачи текущей сессии зачёта или экзамена у этого преподавателя <b>нет</b> — сейчас проходит только начитка учебных пар (${stats.pairs.length} п.), а сдача зачёта будет на следующей сессии.
@@ -3175,11 +3395,444 @@
       showToast('🔄 Восстановлено стандартное изображение');
     }
 
-    // Первичный запуск
+
+    // ============================================================================
+    // 10. АДМИН-ПАНЕЛЬ (ПАРОЛЬ 4778) И СИНХРОНИЗАЦИЯ С ФАЙЛОМ SCHEDULE.JSON НА GITHUB
+    // ============================================================================
+    function handleAdminAuthClick() {
+      if (isAdminMode) {
+        isAdminMode = false;
+        try {
+          sessionStorage.removeItem(STORAGE_KEY_ADMIN_SESSION);
+          localStorage.removeItem(STORAGE_KEY_ADMIN_SESSION);
+        } catch (e) {}
+        if (simDateObj) resetSim();
+        const drawer = document.getElementById('timeMachineDrawer');
+        if (drawer) drawer.classList.add('hidden');
+        if (currentBottomTab === 'conflicts') {
+          switchBottomTab('exams');
+        }
+        applyAdminVisibility();
+        refreshAllViews();
+        showToast('🔒 Вы вышли из админ-панели');
+      } else {
+        const modal = document.getElementById('adminPasswordModal');
+        const inp = document.getElementById('adminPasswordInput');
+        const err = document.getElementById('adminPasswordError');
+        if (err) err.classList.add('hidden');
+        if (inp) inp.value = '';
+        if (modal) modal.classList.remove('hidden');
+        setTimeout(() => { if (inp) inp.focus(); }, 60);
+      }
+    }
+
+    function closeAdminPasswordModal() {
+      const modal = document.getElementById('adminPasswordModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function submitAdminPassword() {
+      const inp = document.getElementById('adminPasswordInput');
+      const err = document.getElementById('adminPasswordError');
+      const val = (inp ? inp.value : '').trim();
+
+      if (val === ADMIN_PASSWORD_CODE) {
+        isAdminMode = true;
+        try {
+          sessionStorage.setItem(STORAGE_KEY_ADMIN_SESSION, '1');
+          localStorage.setItem(STORAGE_KEY_ADMIN_SESSION, '1');
+        } catch (e) {}
+        closeAdminPasswordModal();
+        applyAdminVisibility();
+        refreshAllViews();
+        showToast('🔓 Админ-панель разблокирована!');
+      } else {
+        if (err) err.classList.remove('hidden');
+        if (inp) {
+          inp.value = '';
+          inp.focus();
+        }
+      }
+    }
+
+    function applyAdminVisibility() {
+      // Шапка
+      const hAdd = document.getElementById('headerAddEventBtn');
+      if (hAdd) hAdd.className = isAdminMode
+        ? 'hidden sm:flex px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition items-center gap-1.5 shadow-lg shadow-indigo-600/25'
+        : 'hidden';
+
+      const hSync = document.getElementById('headerSyncBtn');
+      if (hSync) hSync.className = isAdminMode
+        ? 'hidden sm:flex px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600/25 hover:bg-emerald-600/40 text-emerald-200 border border-emerald-500/40 transition items-center gap-1.5 shadow-sm'
+        : 'hidden';
+
+      const hTime = document.getElementById('headerTimeMachineBtn');
+      if (hTime) hTime.className = isAdminMode
+        ? 'px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600/25 hover:bg-indigo-600/40 text-indigo-200 border border-indigo-500/30 transition flex items-center gap-1'
+        : 'hidden';
+
+      const hSub = document.getElementById('headerSubtext');
+      if (hSub) hSub.textContent = isAdminMode
+        ? 'Минск (UTC+3) • Сессия + Смены 09–09 (Админ)'
+        : 'Минск (UTC+3) • Сессия группы 1Б';
+
+      // Календарь и легенда
+      const cAdd = document.getElementById('calAddEventBtn');
+      if (cAdd) cAdd.classList.toggle('hidden', !isAdminMode);
+
+      const cSub = document.getElementById('calSubtitleText');
+      if (cSub) cSub.textContent = isAdminMode
+        ? 'Нажми на день для просмотра или редактирования 👇'
+        : 'Нажми на день для просмотра расписания 👇';
+
+      const lShift = document.getElementById('legendShiftBadge');
+      if (lShift) lShift.classList.toggle('hidden', !isAdminMode);
+
+      // Быстрые кнопки дня
+      const dQuick = document.getElementById('dayAdminQuickActions');
+      if (dQuick) dQuick.classList.toggle('hidden', !isAdminMode);
+
+      // Вкладка Смены 09-09 и кнопка Добавить контроль
+      const tConf = document.getElementById('tabBtnConflicts');
+      if (tConf) tConf.classList.toggle('hidden', !isAdminMode);
+
+      const bAddEx = document.getElementById('addExamControlBtn');
+      if (bAddEx) bAddEx.classList.toggle('hidden', !isAdminMode);
+
+      // Футер: кнопка Админ и кнопка Лог изменений
+      const fLog = document.getElementById('footerChangelogBtn');
+      if (fLog) {
+        fLog.className = isAdminMode
+          ? 'px-2.5 py-0.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-gray-200 border border-white/20 font-sans font-medium text-[11px] transition flex items-center gap-1 shadow-sm'
+          : 'hidden';
+      }
+
+      const admBtn = document.getElementById('adminToggleBtn');
+      const admIcon = document.getElementById('adminToggleIcon');
+      const admTxt = document.getElementById('adminToggleText');
+      if (admBtn && admIcon && admTxt) {
+        if (isAdminMode) {
+          admIcon.textContent = '🔓';
+          admTxt.textContent = 'Выйти из админ-панели';
+          admBtn.className = 'px-2.5 py-0.5 rounded-full bg-emerald-500/20 hover:bg-rose-500/25 active:scale-95 text-emerald-200 hover:text-rose-200 border border-emerald-500/40 font-sans font-bold text-[11px] transition flex items-center gap-1 shadow-sm';
+        } else {
+          admIcon.textContent = '🔒';
+          admTxt.textContent = 'Вход в админ-панель';
+          admBtn.className = 'px-2.5 py-0.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-gray-200 border border-white/20 font-sans font-semibold text-[11px] transition flex items-center gap-1 shadow-sm';
+        }
+      }
+
+      // Мобильное нижнее меню
+      const mobGrid = document.getElementById('mobileBottomNavGrid');
+      const mobAdd = document.getElementById('mobileNavAddBtn');
+      const mobSync = document.getElementById('mobileNavSyncBtn');
+      if (mobGrid && mobAdd && mobSync) {
+        mobGrid.className = isAdminMode
+          ? 'grid grid-cols-6 gap-1 max-w-md mx-auto'
+          : 'grid grid-cols-4 gap-1 max-w-md mx-auto';
+        mobAdd.className = isAdminMode
+          ? 'flex flex-col items-center justify-center py-1 rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 active:scale-95'
+          : 'hidden';
+        mobSync.className = isAdminMode
+          ? 'flex flex-col items-center justify-center py-1 rounded-xl text-emerald-300 hover:text-emerald-200 active:bg-white/10'
+          : 'hidden';
+      }
+    }
+
+    function populateGithubInputs() {
+      const repoEl = document.getElementById('ghRepoInput');
+      const branchEl = document.getElementById('ghBranchInput');
+      const pathEl = document.getElementById('ghPathInput');
+      const tokenEl = document.getElementById('ghTokenInput');
+      if (repoEl) repoEl.value = GITHUB_CONFIG.repo || detectGithubPagesRepo() || '';
+      if (branchEl) branchEl.value = GITHUB_CONFIG.branch || 'main';
+      if (pathEl) pathEl.value = GITHUB_CONFIG.path || 'schedule.json';
+      if (tokenEl) tokenEl.value = GITHUB_CONFIG.token || '';
+    }
+
+    function saveGithubConfigFromInputs() {
+      const repoEl = document.getElementById('ghRepoInput');
+      const branchEl = document.getElementById('ghBranchInput');
+      const pathEl = document.getElementById('ghPathInput');
+      const tokenEl = document.getElementById('ghTokenInput');
+
+      GITHUB_CONFIG = {
+        repo: (repoEl ? repoEl.value : '').trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/+$/, ''),
+        branch: (branchEl ? branchEl.value : 'main').trim() || 'main',
+        path: (pathEl ? pathEl.value : 'schedule.json').trim().replace(/^\/+/, '') || 'schedule.json',
+        token: (tokenEl ? tokenEl.value : '').trim()
+      };
+      try {
+        localStorage.setItem(STORAGE_KEY_GH_CONFIG, JSON.stringify(GITHUB_CONFIG));
+      } catch (e) {}
+    }
+
+    function toggleGhTokenVisibility() {
+      const inp = document.getElementById('ghTokenInput');
+      if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    function detectGithubPagesRepo() {
+      try {
+        const host = window.location.hostname || '';
+        const pathParts = (window.location.pathname || '').split('/').filter(Boolean);
+        if (host.endsWith('.github.io')) {
+          const owner = host.split('.')[0];
+          const repo = pathParts[0] || `${owner}.github.io`;
+          return `${owner}/${repo}`;
+        }
+      } catch (e) {}
+      return '';
+    }
+
+    function buildSchedulePayload(label = 'Синхронизация') {
+      const nowIso = new Date().toISOString();
+      return {
+        version: '0.5',
+        updatedAt: nowIso,
+        stamp: label,
+        classes: CLASSES,
+        exams: EXAMS,
+        shifts: WORK_SHIFTS_24H,
+        notes: PERSONAL_NOTES,
+        changelog: CALENDAR_CHANGELOG
+      };
+    }
+
+    function encodeUtf8Base64(str) {
+      const bytes = new TextEncoder().encode(str);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary);
+    }
+
+    function decodeUtf8Base64(b64) {
+      const binary = atob((b64 || '').replace(/\s+/g, ''));
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return new TextDecoder().decode(bytes);
+    }
+
+    function applyRemoteSchedulePayload(parsed, sourceLabel = 'GitHub') {
+      if (!parsed || typeof parsed !== 'object') return false;
+      let changed = false;
+
+      if (parsed.classes && typeof parsed.classes === 'object') {
+        CLASSES = parsed.classes;
+        changed = true;
+      }
+      if (Array.isArray(parsed.exams)) {
+        EXAMS = parsed.exams;
+        changed = true;
+      }
+      if (Array.isArray(parsed.shifts)) {
+        WORK_SHIFTS_24H = parsed.shifts;
+        changed = true;
+      }
+      if (parsed.notes && typeof parsed.notes === 'object') {
+        PERSONAL_NOTES = parsed.notes;
+        changed = true;
+      }
+      if (Array.isArray(parsed.changelog)) {
+        CALENDAR_CHANGELOG = parsed.changelog;
+      }
+
+      if (changed) {
+        try {
+          localStorage.setItem(STORAGE_KEY_CLASSES, JSON.stringify(CLASSES));
+          localStorage.setItem(STORAGE_KEY_EXAMS, JSON.stringify(EXAMS));
+          localStorage.setItem(STORAGE_KEY_SHIFTS, JSON.stringify(WORK_SHIFTS_24H));
+          localStorage.setItem(STORAGE_KEY_NOTES, JSON.stringify(PERSONAL_NOTES));
+          localStorage.setItem(STORAGE_KEY_CHANGELOG, JSON.stringify(CALENDAR_CHANGELOG));
+          const stamp = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+          localStorage.setItem(STORAGE_KEY_STAMP, `${sourceLabel} ${stamp}`);
+        } catch (e) {}
+        updateStorageBadge();
+        updateChangelogBadge();
+        refreshAllViews();
+      }
+      return changed;
+    }
+
+    async function pullScheduleFromGithub(manualTrigger = false) {
+      if (manualTrigger) {
+        saveGithubConfigFromInputs();
+      }
+      const repo = (GITHUB_CONFIG && GITHUB_CONFIG.repo) || detectGithubPagesRepo();
+      const branch = (GITHUB_CONFIG && GITHUB_CONFIG.branch) || 'main';
+      const path = (GITHUB_CONFIG && GITHUB_CONFIG.path) || 'schedule.json';
+      const token = (GITHUB_CONFIG && GITHUB_CONFIG.token) || '';
+
+      try {
+        if (manualTrigger) {
+          showSyncMessage('⏳ Загружаем актуальный файл расписания с GitHub...');
+        }
+
+        let parsedData = null;
+
+        if (repo) {
+          const apiUrl = `https://api.github.com/repos/${repo}/contents/${path}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`;
+          const headers = { 'Accept': 'application/vnd.github.v3+json' };
+          if (token) headers['Authorization'] = `Bearer ${token}`;
+
+          const resp = await fetch(apiUrl, { headers, cache: 'no-store' });
+          if (resp.ok) {
+            const meta = await resp.json();
+            if (meta && meta.content) {
+              parsedData = JSON.parse(decodeUtf8Base64(meta.content));
+            }
+          } else {
+            const rawUrl = `https://raw.githubusercontent.com/${repo}/${branch}/${path}?t=${Date.now()}`;
+            const rawResp = await fetch(rawUrl, { cache: 'no-store' });
+            if (rawResp.ok) {
+              parsedData = await rawResp.json();
+            }
+          }
+        } else if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+          const sameOriginUrl = new URL(`${path}?t=${Date.now()}`, window.location.href).href;
+          const resp = await fetch(sameOriginUrl, { cache: 'no-store' });
+          if (resp.ok) {
+            parsedData = await resp.json();
+          }
+        }
+
+        if (parsedData && applyRemoteSchedulePayload(parsedData, 'GitHub')) {
+          if (manualTrigger) {
+            showSyncMessage(`✅ Расписание успешно загружено из файла <b>${path}</b> на GitHub!`);
+            showToast('📥 Расписание обновлено из GitHub');
+          }
+          return true;
+        } else if (manualTrigger) {
+          showSyncMessage(`⚠️ Файл <b>${path}</b> пока не найден в репозитории или пуст. Нажми «☁️ Обновить schedule.json на GitHub», чтобы создать его автоматически.`, true);
+        }
+      } catch (err) {
+        if (manualTrigger) {
+          showSyncMessage(`❌ Не удалось загрузить файл с GitHub: ${err.message}`, true);
+        }
+      }
+      return false;
+    }
+
+    async function pushScheduleToGithub(label = 'Обновление', manualTrigger = false) {
+      if (manualTrigger) {
+        saveGithubConfigFromInputs();
+      }
+      const repo = (GITHUB_CONFIG && GITHUB_CONFIG.repo) || detectGithubPagesRepo();
+      const branch = (GITHUB_CONFIG && GITHUB_CONFIG.branch) || 'main';
+      const path = (GITHUB_CONFIG && GITHUB_CONFIG.path) || 'schedule.json';
+      const token = (GITHUB_CONFIG && GITHUB_CONFIG.token) || '';
+
+      if (!repo || !token) {
+        if (manualTrigger) {
+          showSyncMessage('⚠️ Укажи репозиторий (например, <code>username/repo</code>) и свой GitHub Personal Access Token для записи файла на GitHub.', true);
+        }
+        return false;
+      }
+
+      const btn = document.getElementById('ghPushBtn');
+      if (btn && manualTrigger) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳ Сохранение в GitHub...</span>';
+      }
+
+      try {
+        const apiUrl = `https://api.github.com/repos/${repo}/contents/${path}`;
+        const headers = {
+          'Accept': 'application/vnd.github.v3+json',
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        };
+
+        // 1. Получаем текущий SHA файла (если он уже существует)
+        let currentSha = null;
+        const shaCheckUrl = `${apiUrl}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`;
+        const getResp = await fetch(shaCheckUrl, {
+          headers,
+          cache: 'no-store'
+        });
+        if (getResp.ok) {
+          const existingMeta = await getResp.json();
+          if (existingMeta && existingMeta.sha) {
+            currentSha = existingMeta.sha;
+          }
+        }
+
+        // 2. Формируем JSON и отправляем PUT запрос в GitHub
+        const payloadObj = buildSchedulePayload(label);
+        const jsonPretty = JSON.stringify(payloadObj, null, 2);
+        const putBody = {
+          message: `Обновление расписания 1Б (v0.5): ${label}`,
+          content: encodeUtf8Base64(jsonPretty),
+          branch: branch
+        };
+        if (currentSha) {
+          putBody.sha = currentSha;
+        }
+
+        const putResp = await fetch(apiUrl, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify(putBody)
+        });
+
+        const putData = await putResp.json();
+        if (!putResp.ok) {
+          throw new Error(putData.message || `HTTP ${putResp.status}`);
+        }
+
+        const stamp = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        try {
+          localStorage.setItem(STORAGE_KEY_STAMP, `☁️ GitHub ${stamp}`);
+        } catch (e) {}
+        updateStorageBadge();
+
+        if (manualTrigger) {
+          showSyncMessage(`✅ Файл <b>${path}</b> в репозитории <b>${repo}</b> (${branch}) успешно обновлён!`);
+        }
+        showToast(`☁️ Файл ${path} на GitHub обновлён`);
+        return true;
+      } catch (err) {
+        if (manualTrigger) {
+          showSyncMessage(`❌ Ошибка записи в GitHub: <b>${err.message}</b>`, true);
+        } else {
+          showToast(`⚠️ Локально сохранено (ошибка GitHub: ${err.message})`, true);
+        }
+        return false;
+      } finally {
+        if (btn && manualTrigger) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>☁️ Обновить schedule.json на GitHub</span>';
+        }
+      }
+    }
+
+    function downloadScheduleJsonFile() {
+      const payloadObj = buildSchedulePayload('Экспорт schedule.json');
+      const jsonStr = JSON.stringify(payloadObj, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (GITHUB_CONFIG && GITHUB_CONFIG.path) ? GITHUB_CONFIG.path.split('/').pop() : 'schedule.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('💾 Файл schedule.json скачан');
+    }
+
+    // Первичный запуск v0.5
+    applyAdminVisibility();
     updateStorageBadge();
     updateChangelogBadge();
     selectToday();
     refreshAllViews();
+    pullScheduleFromGithub(false);
     setInterval(renderAssistantTemplate, 1000);
   </script>
 </body>
