@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Расписание 1Б • Координатор сессии и Преподаватели Юрфака БГУ v0.5</title>
+  <title>Расписание 1Б • Координатор сессии и Преподаватели Юрфака БГУ v0.6</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
   <script>
@@ -333,7 +333,7 @@
     <footer class="pt-4 pb-6 text-center border-t border-white/10 text-gray-400 text-xs space-y-1.5">
       <div class="flex flex-wrap items-center justify-center gap-2">
         <span class="px-2.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-mono font-bold text-[11px]">
-          Версия приложения 0.5
+          Версия приложения 0.6
         </span>
         <button type="button" id="adminToggleBtn" onclick="handleAdminAuthClick()" class="px-2.5 py-0.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-gray-200 border border-white/20 font-sans font-semibold text-[11px] transition flex items-center gap-1 shadow-sm" title="Вход или выход из панели администратора">
           <span id="adminToggleIcon">🔒</span>
@@ -569,7 +569,7 @@
       <div class="flex items-center justify-between border-b border-white/10 pb-3">
         <div>
           <h3 class="text-base sm:text-lg font-extrabold text-white flex items-center gap-2">
-            🔄 Центр обновления базы 1Б (v0.5)
+            🔄 Центр обновления базы 1Б (v0.6)
           </h3>
           <p class="text-xs text-gray-400">Импорт расписания по коду или распознавание фото через Gemini API</p>
         </div>
@@ -634,12 +634,43 @@
             <span>💾 Скачать schedule.json</span>
           </button>
         </div>
+
+        <!-- БЛОК ЗАГРУЗКИ НОВОГО INDEX.HTML НА GITHUB (v0.6) -->
+        <div class="p-3.5 rounded-2xl bg-indigo-950/50 border border-indigo-500/40 space-y-2.5 mt-2 shadow-inner">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center justify-center text-xs font-bold">🚀</span>
+              <div>
+                <div class="text-xs font-bold text-white">Обновление кода приложения (index.html) на GitHub</div>
+                <div class="text-[10px] text-gray-400">Выбери скачанный index.html — коммит отправится в GitHub в 1 клик</div>
+              </div>
+            </div>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/25 text-indigo-300 border border-indigo-500/30">
+              v0.6 OTA
+            </span>
+          </div>
+
+          <div class="space-y-1">
+            <label class="block text-[11px] font-semibold text-gray-300">1. Выбери файл index.html новой версии:</label>
+            <input type="file" id="ghIndexFileInput" accept=".html,text/html" onchange="onIndexHtmlFileSelected(event)" class="w-full text-xs text-gray-300 file:mr-2.5 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer bg-gray-950/80 rounded-xl border border-white/10 p-1" />
+            <div id="ghIndexFilePreview" class="hidden text-[11px] text-emerald-300 font-mono bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg"></div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="block text-[11px] font-semibold text-gray-300">2. Описание обновления (сообщение коммита):</label>
+            <input type="text" id="ghIndexCommitMsg" placeholder="Например: Обновление интерфейса и функций v0.6" value="Обновление приложения (index.html) v0.6" class="w-full rounded-xl bg-gray-950 border border-white/15 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500" />
+          </div>
+
+          <button type="button" onclick="pushIndexHtmlToGithub()" id="ghPushIndexBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 active:scale-95 text-white text-xs font-bold transition shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-1.5">
+            <span>🚀 Запушить новый index.html на GitHub</span>
+          </button>
+        </div>
       </div>
 
       <!-- ВАРИАНТ 1: АВТО-ПОДБОР МОДЕЛИ GEMINI + СКАНЕР ФОТО -->
       <div id="syncTabAiBody" class="hidden space-y-3.5">
         <div class="p-3 rounded-xl bg-purple-500/10 border border-purple-500/30 text-xs text-purple-200 leading-relaxed">
-          ✨ <b>Умное подключение Gemini v0.5:</b> приложение само запрашивает у Google список всех моделей, доступных на твоём ключе, и автоматически переключается на свободную модель, если основной сервер перегружен.
+          ✨ <b>Умное подключение Gemini v0.6:</b> приложение само запрашивает у Google список всех моделей, доступных на твоём ключе, и автоматически переключается на свободную модель, если основной сервер перегружен.
         </div>
 
         <div class="space-y-1.5">
@@ -695,31 +726,56 @@
     </div>
   </div>
 
-  <!-- МОДАЛЬНОЕ ОКНО: ЛОГ ИЗМЕНЕНИЙ В КАЛЕНДАРЕ -->
+  <!-- МОДАЛЬНОЕ ОКНО: ЛОГ ИЗМЕНЕНИЙ В КАЛЕНДАРЕ И ОБНОВЛЕНИЙ ПРИЛОЖЕНИЯ (v0.6) -->
   <div id="changelogModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="glass-card w-full sm:max-w-xl rounded-t-3xl sm:rounded-2xl border-t sm:border border-white/15 p-4 sm:p-6 space-y-4 max-h-[90vh] flex flex-col">
+    <div class="glass-card w-full sm:max-w-xl rounded-t-3xl sm:rounded-2xl border-t sm:border border-white/15 p-4 sm:p-6 space-y-3.5 max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-white/10 pb-3 shrink-0">
         <div class="flex items-center gap-2.5">
           <div class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center justify-center text-sm font-bold">
             📜
           </div>
           <div>
-            <h3 class="text-base sm:text-lg font-extrabold text-white">Журнал изменений</h3>
-            <p class="text-xs text-gray-400">История добавления, редактирования и удаления в календаре</p>
+            <h3 class="text-base sm:text-lg font-extrabold text-white">Журнал истории и релизов</h3>
+            <p class="text-xs text-gray-400">Правки в расписании и хронология обновлений приложения</p>
           </div>
         </div>
         <button onclick="closeChangelogModal()" class="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 flex items-center justify-center text-lg">✕</button>
       </div>
 
-      <div class="flex items-center justify-between gap-2 shrink-0 text-xs">
-        <span class="text-gray-400">Всего записей: <b id="changelogTotalCount" class="text-white">0</b></span>
+      <!-- Переключатель вкладок лога: Расписание vs Обновления приложения -->
+      <div class="grid grid-cols-2 gap-1.5 bg-gray-950 p-1 rounded-xl border border-white/10 shrink-0">
+        <button type="button" onclick="switchChangelogTab('schedule')" id="logTabBtnSchedule" class="py-1.5 px-2 rounded-lg text-xs font-bold bg-indigo-600 text-white transition flex items-center justify-center gap-1.5">
+          <span>📅 Расписание</span>
+          <span id="logBadgeScheduleCount" class="px-1.5 py-0.2 rounded-full bg-black/30 text-[10px] font-mono">0</span>
+        </button>
+        <button type="button" onclick="switchChangelogTab('releases')" id="logTabBtnReleases" class="py-1.5 px-2 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition flex items-center justify-center gap-1.5">
+          <span>🚀 Обновления приложения</span>
+          <span id="logBadgeReleasesCount" class="px-1.5 py-0.2 rounded-full bg-white/10 text-[10px] font-mono">6</span>
+        </button>
+      </div>
+
+      <!-- Панель управления вкладки расписания -->
+      <div id="logScheduleControls" class="flex items-center justify-between gap-2 shrink-0 text-xs">
+        <span class="text-gray-400">Записей в расписании: <b id="changelogTotalCount" class="text-white">0</b></span>
         <button onclick="clearChangelogHistory()" class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 transition text-[11px] font-semibold">
           🗑️ Очистить журнал
         </button>
       </div>
 
-      <!-- Список записей лога -->
+      <!-- Панель статуса вкладки обновлений приложения -->
+      <div id="logReleasesControls" class="hidden flex items-center justify-between gap-2 shrink-0 text-xs">
+        <span class="text-gray-300">Хронология версий приложения (v0.1 – v0.6):</span>
+        <span class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-semibold">
+          🔒 Не стирается
+        </span>
+      </div>
+
+      <!-- Список записей лога расписания -->
       <div id="changelogEntriesContainer" class="flex-1 overflow-y-auto space-y-2 pr-1 no-scrollbar min-h-[220px]">
+      </div>
+
+      <!-- Список записей обновлений приложения (v0.1 - v0.6) -->
+      <div id="changelogReleasesContainer" class="hidden flex-1 overflow-y-auto space-y-2.5 pr-1 no-scrollbar min-h-[220px]">
       </div>
 
       <div class="pt-2 border-t border-white/10 shrink-0 flex justify-end">
@@ -841,8 +897,8 @@
 
     // Режим администратора (пароль 4778) и конфигурация файла schedule.json на GitHub
     const ADMIN_PASSWORD_CODE = '4778';
-    const STORAGE_KEY_ADMIN_SESSION = 'raspisanie_1b_admin_active_v05';
-    const STORAGE_KEY_GH_CONFIG = 'raspisanie_1b_github_config_v05';
+    const STORAGE_KEY_ADMIN_SESSION = 'raspisanie_1b_admin_active_v06';
+    const STORAGE_KEY_GH_CONFIG = 'raspisanie_1b_github_config_v06';
 
     let isAdminMode = false;
     try {
@@ -2338,10 +2394,92 @@
 
 
     // ============================================================================
-    // 8. ЖУРНАЛ (ЛОГ) ИЗМЕНЕНИЙ В КАЛЕНДАРЕ
+    // 8. ЖУРНАЛ (ЛОГ) ИЗМЕНЕНИЙ В РАСПИСАНИИ И ИСТОРИЯ ОБНОВЛЕНИЙ ПРИЛОЖЕНИЯ (v0.6)
     // ============================================================================
     const STORAGE_KEY_CHANGELOG = 'raspisanie_1b_changelog_v1';
+    const STORAGE_KEY_APP_RELEASES = 'raspisanie_1b_app_releases_v2';
+
     let CALENDAR_CHANGELOG = loadParsedStorage(STORAGE_KEY_CHANGELOG, []);
+
+    const DEFAULT_APP_RELEASES = [
+      {
+        id: 'rel_06',
+        version: 'v0.6',
+        date: '28.10.2026',
+        title: 'Загрузка index.html через админку и ежеминутная авто-синхронизация',
+        badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+        icon: '🚀',
+        features: [
+          'Прямая загрузка обновлённого файла index.html прямо в админке приложения с автоматической отправкой коммита в репозиторий GitHub через официальный REST API.',
+          'Фоновая ежеминутная синхронизация с GitHub (каждые 60 сек.) в бесшумном режиме — подтягивает актуальное расписание без всплывающих уведомлений.',
+          'Раздельный журнал: выделенная вкладка «Обновления приложения» с подробным описанием всех версий, защищённая от случайной очистки.'
+        ]
+      },
+      {
+        id: 'rel_05',
+        version: 'v0.5',
+        date: '28.10.2026',
+        title: 'Хранение в schedule.json на GitHub и режим администратора',
+        badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+        icon: '🐙',
+        features: [
+          'Полный перенос базы расписания в отдельный файл schedule.json на GitHub (без дублирования в коде index.html).',
+          'Вход в админ-панель по паролю 4778 рядом с версией: скрывает суточные смены 09–09, инструменты редактирования и центр базы от обычных студентов.',
+          'Живая сводка «⚡ На данный момент» с ярким акцентом на текущую пару или окно.',
+          'Удалена фраза «сессия ВД» из календаря и легенды.'
+        ]
+      },
+      {
+        id: 'rel_04',
+        version: 'v0.4',
+        date: '27.10.2026',
+        title: 'Восстановление официального фото преподавателя ЮФ БГУ',
+        badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+        icon: '👨‍🏫',
+        features: [
+          'Восстановлено подлинное фото доц. Федчука И.Л. с официального портала Юрфака БГУ (law.bsu.by/images/users/795.jpg).'
+        ]
+      },
+      {
+        id: 'rel_03',
+        version: 'v0.3',
+        date: '27.10.2026',
+        title: 'Справочник преподавателей ЮФ БГУ и суточные смены',
+        badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+        icon: '🏛️',
+        features: [
+          'Досье 15 преподавателей группы 1Б: кафедры, звания, контакты, научные интересы и перечень всех пар.',
+          'Отслеживание суточных смен (09:00–09:00) и предупреждения о накладках со сдачей зачётов/экзаменов.'
+        ]
+      },
+      {
+        id: 'rel_02',
+        version: 'v0.2',
+        date: '26.10.2026',
+        title: 'Журнал изменений и AI-сканер по фото расписания',
+        badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+        icon: '🤖',
+        features: [
+          'AI-сканер фотографий стенда расписания на базе Google Gemini API с авто-подбором моделей.',
+          'Журнал действий в расписании (добавление, редактирование, удаление пар и зачётов).'
+        ]
+      },
+      {
+        id: 'rel_01',
+        version: 'v0.1',
+        date: '25.10.2026',
+        title: 'Базовый релиз веб-координатора сессии 1Б',
+        badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+        icon: '🎓',
+        features: [
+          'Сетка расписания сессии (26.10 – 15.11.2026) для группы 1Б («Политология», Юрфак БГУ).',
+          'Интерактивный календарь, сводка дня и расчёт времени до пар.'
+        ]
+      }
+    ];
+
+    let APP_RELEASES_LOG = loadParsedStorage(STORAGE_KEY_APP_RELEASES, DEFAULT_APP_RELEASES);
+    let activeChangelogTab = 'schedule';
 
     function logCalendarChange(action, detail) {
       const now = new Date();
@@ -2364,20 +2502,81 @@
       updateChangelogBadge();
     }
 
+    function logAppReleaseChange(versionLabel, detailText) {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const newRelease = {
+        id: 'rel_' + Date.now(),
+        version: versionLabel,
+        date: dateStr,
+        title: 'Обновление index.html через админку',
+        badgeColor: 'bg-indigo-500/25 text-indigo-300 border-indigo-500/40',
+        icon: '🚀',
+        features: [detailText]
+      };
+      APP_RELEASES_LOG.unshift(newRelease);
+      try {
+        localStorage.setItem(STORAGE_KEY_APP_RELEASES, JSON.stringify(APP_RELEASES_LOG));
+      } catch (e) {}
+      updateChangelogBadge();
+      if (activeChangelogTab === 'releases') {
+        renderAppReleases();
+      }
+    }
+
     function updateChangelogBadge() {
+      const totalCount = CALENDAR_CHANGELOG.length;
       const b = document.getElementById('changelogCountBadge');
-      if (b) b.textContent = CALENDAR_CHANGELOG.length;
+      if (b) b.textContent = totalCount;
       const total = document.getElementById('changelogTotalCount');
-      if (total) total.textContent = CALENDAR_CHANGELOG.length;
+      if (total) total.textContent = totalCount;
+      const schedBadge = document.getElementById('logBadgeScheduleCount');
+      if (schedBadge) schedBadge.textContent = totalCount;
+      const relBadge = document.getElementById('logBadgeReleasesCount');
+      if (relBadge) relBadge.textContent = APP_RELEASES_LOG.length;
     }
 
     function openChangelogModal() {
-      renderChangelogEntries();
+      switchChangelogTab(activeChangelogTab || 'schedule');
       document.getElementById('changelogModal').classList.remove('hidden');
     }
 
     function closeChangelogModal() {
       document.getElementById('changelogModal').classList.add('hidden');
+    }
+
+    function switchChangelogTab(tab) {
+      activeChangelogTab = tab;
+      const isSched = tab === 'schedule';
+
+      const schedBtn = document.getElementById('logTabBtnSchedule');
+      const relBtn = document.getElementById('logTabBtnReleases');
+      if (schedBtn) {
+        schedBtn.className = isSched
+          ? 'py-1.5 px-2 rounded-lg text-xs font-bold bg-indigo-600 text-white transition flex items-center justify-center gap-1.5'
+          : 'py-1.5 px-2 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition flex items-center justify-center gap-1.5';
+      }
+      if (relBtn) {
+        relBtn.className = !isSched
+          ? 'py-1.5 px-2 rounded-lg text-xs font-bold bg-indigo-600 text-white transition flex items-center justify-center gap-1.5'
+          : 'py-1.5 px-2 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition flex items-center justify-center gap-1.5';
+      }
+
+      const schedCtrl = document.getElementById('logScheduleControls');
+      const relCtrl = document.getElementById('logReleasesControls');
+      if (schedCtrl) schedCtrl.classList.toggle('hidden', !isSched);
+      if (relCtrl) relCtrl.classList.toggle('hidden', isSched);
+
+      const schedBox = document.getElementById('changelogEntriesContainer');
+      const relBox = document.getElementById('changelogReleasesContainer');
+      if (schedBox) schedBox.classList.toggle('hidden', !isSched);
+      if (relBox) relBox.classList.toggle('hidden', isSched);
+
+      if (isSched) {
+        renderChangelogEntries();
+      } else {
+        renderAppReleases();
+      }
     }
 
     function renderChangelogEntries() {
@@ -2388,7 +2587,7 @@
         container.innerHTML = `
           <div class="text-center py-10 space-y-2">
             <div class="text-3xl">📭</div>
-            <div class="text-sm font-semibold text-gray-300">История изменений пуста</div>
+            <div class="text-sm font-semibold text-gray-300">История расписания пуста</div>
             <div class="text-xs text-gray-500">Любые добавления, редактирования и удаления в расписании будут автоматически сохраняться сюда.</div>
           </div>
         `;
@@ -2427,6 +2626,45 @@
       }).join('');
     }
 
+    function renderAppReleases() {
+      const container = document.getElementById('changelogReleasesContainer');
+      updateChangelogBadge();
+
+      if (!APP_RELEASES_LOG || APP_RELEASES_LOG.length === 0) {
+        container.innerHTML = `<div class="text-center py-8 text-xs text-gray-400">Список релизов пуст</div>`;
+        return;
+      }
+
+      container.innerHTML = APP_RELEASES_LOG.map(rel => {
+        const feats = (rel.features || []).map(f => `
+          <li class="flex items-start gap-1.5 text-xs text-gray-200 leading-relaxed">
+            <span class="text-indigo-400 text-sm leading-none">•</span>
+            <span>${f}</span>
+          </li>
+        `).join('');
+
+        return `
+          <div class="p-3.5 rounded-xl bg-gray-950/90 border border-white/10 hover:border-indigo-500/35 transition space-y-2">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <div class="flex items-center gap-2">
+                <span class="text-base">${rel.icon || '🚀'}</span>
+                <span class="font-bold text-sm text-white">${rel.title}</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full border ${rel.badgeColor || 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'}">
+                  ${rel.version}
+                </span>
+                <span class="text-[10px] font-mono text-gray-400">${rel.date}</span>
+              </div>
+            </div>
+            <ul class="space-y-1.5 pl-1 pt-1 border-t border-white/5">
+              ${feats}
+            </ul>
+          </div>
+        `;
+      }).join('');
+    }
+
     let confirmClearLogPending = false;
     function clearChangelogHistory() {
       if (!confirmClearLogPending) {
@@ -2439,7 +2677,7 @@
       CALENDAR_CHANGELOG = [];
       localStorage.removeItem(STORAGE_KEY_CHANGELOG);
       renderChangelogEntries();
-      showToast('🗑️ Журнал изменений очищен');
+      showToast('🗑️ Журнал расписания очищен (обновления приложения сохранены)');
     }
 
     
@@ -3519,7 +3757,7 @@
     function buildSchedulePayload(label = 'Синхронизация') {
       const nowIso = new Date().toISOString();
       return {
-        version: '0.5',
+        version: '0.6',
         updatedAt: nowIso,
         stamp: label,
         classes: CLASSES,
@@ -3589,7 +3827,7 @@
       return changed;
     }
 
-    async function pullScheduleFromGithub(manualTrigger = false) {
+    async function pullScheduleFromGithub(manualTrigger = false, silent = false) {
       if (manualTrigger) {
         saveGithubConfigFromInputs();
       }
@@ -3599,7 +3837,7 @@
       const token = (GITHUB_CONFIG && GITHUB_CONFIG.token) || '';
 
       try {
-        if (manualTrigger) {
+        if (manualTrigger && !silent) {
           showSyncMessage('⏳ Загружаем актуальный файл расписания с GitHub...');
         }
 
@@ -3643,16 +3881,16 @@
         }
 
         if (parsedData && applyRemoteSchedulePayload(parsedData, 'GitHub')) {
-          if (manualTrigger) {
+          if (manualTrigger && !silent) {
             showSyncMessage(`✅ Расписание успешно загружено из файла <b>${path}</b> на GitHub!`);
             showToast('📥 Расписание обновлено из GitHub');
           }
           return true;
-        } else if (manualTrigger) {
+        } else if (manualTrigger && !silent) {
           showSyncMessage(`⚠️ Файл <b>${path}</b> пока не найден в репозитории или пуст. Нажми «☁️ Обновить schedule.json на GitHub», чтобы создать его автоматически.`, true);
         }
       } catch (err) {
-        if (manualTrigger) {
+        if (manualTrigger && !silent) {
           showSyncMessage(`❌ Не удалось загрузить файл с GitHub: ${err.message}`, true);
         }
       }
@@ -3707,7 +3945,7 @@
         const payloadObj = buildSchedulePayload(label);
         const jsonPretty = JSON.stringify(payloadObj, null, 2);
         const putBody = {
-          message: `Обновление расписания 1Б (v0.5): ${label}`,
+          message: `Обновление расписания 1Б (v0.6): ${label}`,
           content: encodeUtf8Base64(jsonPretty),
           branch: branch
         };
@@ -3767,14 +4005,137 @@
       showToast('💾 Файл schedule.json скачан');
     }
 
-    // Первичный запуск v0.5
+    let selectedIndexHtmlFile = null;
+
+    function onIndexHtmlFileSelected(event) {
+      const file = event.target.files && event.target.files[0];
+      const prevBox = document.getElementById('ghIndexFilePreview');
+      if (!file) {
+        selectedIndexHtmlFile = null;
+        if (prevBox) prevBox.classList.add('hidden');
+        return;
+      }
+      selectedIndexHtmlFile = file;
+      if (prevBox) {
+        const kbSize = (file.size / 1024).toFixed(1);
+        prevBox.textContent = `📄 Файл выбран: ${file.name} (${kbSize} КБ). Готов к отправке на GitHub!`;
+        prevBox.classList.remove('hidden');
+      }
+    }
+
+    async function pushIndexHtmlToGithub() {
+      saveGithubConfigFromInputs();
+      const repo = (GITHUB_CONFIG && GITHUB_CONFIG.repo) || detectGithubPagesRepo();
+      const branch = (GITHUB_CONFIG && GITHUB_CONFIG.branch) || 'main';
+      const token = (GITHUB_CONFIG && GITHUB_CONFIG.token) || '';
+
+      if (!repo || !token) {
+        showSyncMessage('⚠️ Укажи репозиторий (например, <code>username/repo</code>) и свой GitHub Personal Access Token выше!', true);
+        return false;
+      }
+
+      const fileInput = document.getElementById('ghIndexFileInput');
+      const file = selectedIndexHtmlFile || (fileInput && fileInput.files && fileInput.files[0]);
+      if (!file) {
+        showSyncMessage('⚠️ Сначала выбери файл <code>index.html</code> на своём устройстве!', true);
+        return false;
+      }
+
+      const commitMsgInput = document.getElementById('ghIndexCommitMsg');
+      const commitMsg = (commitMsgInput && commitMsgInput.value.trim()) || 'Обновление приложения (index.html) v0.6';
+
+      const btn = document.getElementById('ghPushIndexBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳ Чтение и отправка в GitHub...</span>';
+      }
+
+      try {
+        const fileText = await file.text();
+        if (!fileText.includes('<!DOCTYPE html>') && !fileText.includes('<html')) {
+          throw new Error('Выбранный файл не содержит HTML-разметку (<!DOCTYPE html> или <html). Проверь файл!');
+        }
+
+        showSyncMessage('⏳ Проверяем файл index.html в репозитории на GitHub...');
+        const apiUrl = `https://api.github.com/repos/${repo}/contents/index.html`;
+        const headers = {
+          'Accept': 'application/vnd.github.v3+json',
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        };
+
+        // 1. Получаем текущий SHA index.html в репозитории
+        let currentSha = null;
+        const shaCheckUrl = `${apiUrl}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`;
+        const getResp = await fetch(shaCheckUrl, {
+          headers,
+          cache: 'no-store'
+        });
+        if (getResp.ok) {
+          const existingMeta = await getResp.json();
+          if (existingMeta && existingMeta.sha) {
+            currentSha = existingMeta.sha;
+          }
+        }
+
+        // 2. Отправляем PUT запрос с новым index.html
+        showSyncMessage(`⏳ Коммитим новый index.html в ветку <b>${branch}</b>...`);
+        const putBody = {
+          message: commitMsg,
+          content: encodeUtf8Base64(fileText),
+          branch: branch
+        };
+        if (currentSha) {
+          putBody.sha = currentSha;
+        }
+
+        const putResp = await fetch(apiUrl, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify(putBody)
+        });
+
+        const putData = await putResp.json();
+        if (!putResp.ok) {
+          throw new Error(putData.message || `HTTP ${putResp.status}`);
+        }
+
+        const kb = (fileText.length / 1024).toFixed(1);
+        logAppReleaseChange('v0.6 (OTA)', `Файл index.html (${kb} КБ) успешно отправлен на GitHub в ветку ${branch}. Коммит: «${commitMsg}».`);
+
+        showSyncMessage(`🎉 <b>Файл index.html успешно обновлён на GitHub!</b><br>Коммит отправлен в ветку <code>${branch}</code>. GitHub Pages пересоберёт сайт примерно за 30–60 секунд.`);
+        showToast('🚀 index.html успешно обновлён на GitHub!');
+
+        if (fileInput) fileInput.value = '';
+        selectedIndexHtmlFile = null;
+        const prevBox = document.getElementById('ghIndexFilePreview');
+        if (prevBox) prevBox.classList.add('hidden');
+        return true;
+      } catch (err) {
+        showSyncMessage(`❌ Ошибка обновления index.html в GitHub: <b>${err.message}</b>`, true);
+        showToast(`❌ Ошибка: ${err.message}`, true);
+        return false;
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>🚀 Запушить новый index.html на GitHub</span>';
+        }
+      }
+    }
+
+    // Первичный запуск v0.6
     applyAdminVisibility();
     updateStorageBadge();
     updateChangelogBadge();
     selectToday();
     refreshAllViews();
-    pullScheduleFromGithub(false);
-    setInterval(renderAssistantTemplate, 1000);
+    pullScheduleFromGithub(false, true); // Тихий первичный опрос без уведомлений
+
+    // Автоматические периодические таймеры
+    setInterval(renderAssistantTemplate, 1000); // Секундные часы и проверка триггеров пар
+    setInterval(() => {
+      pullScheduleFromGithub(false, true); // Фоновая ежеминутная синхронизация с GitHub (без всплывающих уведомлений)
+    }, 60000);
   </script>
 </body>
 </html>
