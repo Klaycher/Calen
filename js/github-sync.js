@@ -22,25 +22,37 @@ const MODULAR_MANIFEST_INFO = [
   { path: 'css/style.css',      title: 'Таблица стилей, сетка и анимации', badge: 'CSS • Стили' },
   { path: 'data/schedule.json', title: 'Живая база расписания пар, экзаменов и смен', badge: 'JSON • База' },
   { path: 'data/teachers.json', title: 'Досье и фото 15 преподавателей Юрфака БГУ', badge: 'JSON • Справочник' },
-  { path: 'data/releases.json', title: 'Хронология релизов приложения (v0.1 – v1.0)', badge: 'JSON • Версии' },
+  { path: 'data/releases.json', title: 'Хронология релизов приложения (v0.1 – v1.0.1)', badge: 'JSON • Версии' },
   { path: 'js/config.js',       title: 'Константы, состояние, утилиты дат и загрузчик JSON', badge: 'JS • Модуль 1' },
   { path: 'js/calendar.js',     title: 'Сетка 21 дня, сводка дня, шаблон «На данный момент» и пуши', badge: 'JS • Модуль 2' },
   { path: 'js/teachers.js',     title: 'Поиск, фильтры и карточка досье преподавателя', badge: 'JS • Модуль 3' },
   { path: 'js/admin.js',        title: 'Авторизация (4778), CRUD пар/экзаменов и журнал истории', badge: 'JS • Модуль 4' },
   { path: 'js/github-sync.js',  title: 'Синхронизация с GitHub API и обновление отдельных модулей', badge: 'JS • Модуль 5' },
-  { path: 'js/ai-scanner.js',   title: 'Gemini API, распознавание фото и умное слияние пар/экзаменов', badge: 'JS • Модуль 6' },
+  { path: 'js/ai-scanner.js',   title: 'Gemini API (3.5 Flash Lite), очередь 4 фото и предпросмотр изменений', badge: 'JS • Модуль 6' },
   { path: 'js/app.js',          title: 'Установка PWA на телефон, таймеры и точка входа', badge: 'JS • Модуль 7' }
 ];
 
 function populateGithubInputs() {
+  const repoVal = (GITHUB_CONFIG && GITHUB_CONFIG.repo) || detectGithubPagesRepo() || DEFAULT_GITHUB_REPO;
+  const branchVal = (GITHUB_CONFIG && GITHUB_CONFIG.branch) || 'main';
+  const pathVal = (GITHUB_CONFIG && GITHUB_CONFIG.path) || 'data/schedule.json';
+  const tokenVal = (GITHUB_CONFIG && GITHUB_CONFIG.token) || '';
+
   const repoEl = document.getElementById('ghRepoInput');
   const branchEl = document.getElementById('ghBranchInput');
   const pathEl = document.getElementById('ghPathInput');
   const tokenEl = document.getElementById('ghTokenInput');
-  if (repoEl) repoEl.value = GITHUB_CONFIG.repo || detectGithubPagesRepo() || '';
-  if (branchEl) branchEl.value = GITHUB_CONFIG.branch || 'main';
-  if (pathEl) pathEl.value = GITHUB_CONFIG.path || 'data/schedule.json';
-  if (tokenEl) tokenEl.value = GITHUB_CONFIG.token || '';
+  if (repoEl) repoEl.value = repoVal;
+  if (branchEl) branchEl.value = branchVal;
+  if (pathEl) pathEl.value = pathVal;
+  if (tokenEl) tokenEl.value = tokenVal;
+
+  const modRepoEl = document.getElementById('modDeployRepoInput');
+  const modBranchEl = document.getElementById('modDeployBranchInput');
+  const modTokenEl = document.getElementById('modDeployTokenInput');
+  if (modRepoEl) modRepoEl.value = repoVal;
+  if (modBranchEl) modBranchEl.value = branchVal;
+  if (modTokenEl) modTokenEl.value = tokenVal;
 }
 
 function saveGithubConfigFromInputs() {
@@ -49,33 +61,52 @@ function saveGithubConfigFromInputs() {
   const pathEl = document.getElementById('ghPathInput');
   const tokenEl = document.getElementById('ghTokenInput');
 
-  GITHUB_CONFIG = {
-    repo: (repoEl ? repoEl.value : '').trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/+$/, ''),
-    branch: (branchEl ? branchEl.value : 'main').trim() || 'main',
-    path: (pathEl ? pathEl.value : 'data/schedule.json').trim().replace(/^\/+/, '') || 'data/schedule.json',
-    token: (tokenEl ? tokenEl.value : '').trim()
-  };
+  const repo = ((repoEl ? repoEl.value : '') || detectGithubPagesRepo() || DEFAULT_GITHUB_REPO)
+    .trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/+$/, '') || DEFAULT_GITHUB_REPO;
+  const branch = (branchEl ? branchEl.value : 'main').trim() || 'main';
+  const path = (pathEl ? pathEl.value : 'data/schedule.json').trim().replace(/^\/+/, '') || 'data/schedule.json';
+  const token = (tokenEl ? tokenEl.value : '').trim();
+
+  GITHUB_CONFIG = { repo, branch, path, token };
   try {
     localStorage.setItem(STORAGE_KEY_GH_CONFIG, JSON.stringify(GITHUB_CONFIG));
   } catch (e) {}
+
+  const modRepoEl = document.getElementById('modDeployRepoInput');
+  const modBranchEl = document.getElementById('modDeployBranchInput');
+  const modTokenEl = document.getElementById('modDeployTokenInput');
+  if (modRepoEl && modRepoEl.value !== repo) modRepoEl.value = repo;
+  if (modBranchEl && modBranchEl.value !== branch) modBranchEl.value = branch;
+  if (modTokenEl && modTokenEl.value !== token) modTokenEl.value = token;
+}
+
+function saveModDeployConfigFromInputs() {
+  const modRepoEl = document.getElementById('modDeployRepoInput');
+  const modBranchEl = document.getElementById('modDeployBranchInput');
+  const modTokenEl = document.getElementById('modDeployTokenInput');
+
+  const repo = ((modRepoEl ? modRepoEl.value : '') || (GITHUB_CONFIG && GITHUB_CONFIG.repo) || detectGithubPagesRepo() || DEFAULT_GITHUB_REPO)
+    .trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/+$/, '') || DEFAULT_GITHUB_REPO;
+  const branch = (modBranchEl ? modBranchEl.value : 'main').trim() || 'main';
+  const path = (GITHUB_CONFIG && GITHUB_CONFIG.path) || 'data/schedule.json';
+  const token = (modTokenEl ? modTokenEl.value : '').trim();
+
+  GITHUB_CONFIG = { repo, branch, path, token };
+  try {
+    localStorage.setItem(STORAGE_KEY_GH_CONFIG, JSON.stringify(GITHUB_CONFIG));
+  } catch (e) {}
+
+  const repoEl = document.getElementById('ghRepoInput');
+  const branchEl = document.getElementById('ghBranchInput');
+  const tokenEl = document.getElementById('ghTokenInput');
+  if (repoEl && repoEl.value !== repo) repoEl.value = repo;
+  if (branchEl && branchEl.value !== branch) branchEl.value = branch;
+  if (tokenEl && tokenEl.value !== token) tokenEl.value = token;
 }
 
 function toggleGhTokenVisibility() {
   const inp = document.getElementById('ghTokenInput');
   if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
-}
-
-function detectGithubPagesRepo() {
-  try {
-    const host = window.location.hostname || '';
-    const pathParts = (window.location.pathname || '').split('/').filter(Boolean);
-    if (host.endsWith('.github.io')) {
-      const owner = host.split('.')[0];
-      const repo = pathParts[0] || `${owner}.github.io`;
-      return `${owner}/${repo}`;
-    }
-  } catch (e) {}
-  return '';
 }
 
 function getChangelogEntryTimestampMs(item) {
@@ -88,14 +119,21 @@ function getChangelogEntryTimestampMs(item) {
 }
 
 function buildSchedulePayload(label = 'Синхронизация') {
-  const nowIso = new Date().toISOString();
+  let updatedAtMs = Date.now();
+  try {
+    const savedMs = Number(localStorage.getItem(STORAGE_KEY_UPDATED_AT) || 0);
+    if (savedMs > updatedAtMs) updatedAtMs = savedMs;
+    localStorage.setItem(STORAGE_KEY_UPDATED_AT, String(updatedAtMs));
+  } catch (e) {}
+  const nowIso = new Date(updatedAtMs).toISOString();
   let clearedAt = 0;
   try {
     clearedAt = Number(localStorage.getItem(STORAGE_KEY_CHANGELOG_CLEARED_AT) || 0);
   } catch (e) {}
   return {
-    version: '1.0',
+    version: '1.0.1',
     updatedAt: nowIso,
+    updatedAtMs: updatedAtMs,
     stamp: label,
     classes: CLASSES,
     exams: EXAMS,
@@ -106,8 +144,25 @@ function buildSchedulePayload(label = 'Синхронизация') {
   };
 }
 
-function applyRemoteSchedulePayload(parsed, sourceLabel = 'GitHub') {
+function applyRemoteSchedulePayload(parsed, sourceLabel = 'GitHub', forceApply = false) {
   if (!parsed || typeof parsed !== 'object') return false;
+
+  // Если сейчас активно отправляется коммит расписания на GitHub, не перезаписываем локальное состояние старым ответом
+  if (!forceApply && window._ghPushInFlightCount && window._ghPushInFlightCount > 0) {
+    return false;
+  }
+
+  const remoteUpdatedAtMs = getPayloadTimestampMs(parsed);
+  let localUpdatedAtMs = 0;
+  try {
+    localUpdatedAtMs = Number(localStorage.getItem(STORAGE_KEY_UPDATED_AT) || 0);
+  } catch (e) {}
+
+  // Защита от устаревшего кэша CDN: если на клиенте уже сохранена более новая версия, не затираем её старой
+  if (!forceApply && localUpdatedAtMs > 0 && remoteUpdatedAtMs > 0 && remoteUpdatedAtMs < localUpdatedAtMs) {
+    return false;
+  }
+
   let changed = false;
 
   if (parsed.classes && typeof parsed.classes === 'object') {
@@ -126,6 +181,7 @@ function applyRemoteSchedulePayload(parsed, sourceLabel = 'GitHub') {
     PERSONAL_NOTES = parsed.notes;
     changed = true;
   }
+
   let localClearedAt = 0;
   try {
     localClearedAt = Number(localStorage.getItem(STORAGE_KEY_CHANGELOG_CLEARED_AT) || 0);
@@ -139,7 +195,6 @@ function applyRemoteSchedulePayload(parsed, sourceLabel = 'GitHub') {
   }
 
   if (Array.isArray(parsed.changelog)) {
-    // Если на сервере журнал пуст и есть метка очистки новее локальных записей — очищаем и локально
     if (parsed.changelog.length === 0 && remoteClearedAt >= localClearedAt && remoteClearedAt > 0) {
       CALENDAR_CHANGELOG = CALENDAR_CHANGELOG.filter(item => getChangelogEntryTimestampMs(item) > remoteClearedAt);
     } else {
@@ -170,63 +225,71 @@ function applyRemoteSchedulePayload(parsed, sourceLabel = 'GitHub') {
     }
   }
 
-  const healRes = typeof healScheduleAndExamsFromLogs === 'function'
-    ? healScheduleAndExamsFromLogs()
-    : { healed: false };
-
-  if (changed || healRes.healed) {
+  if (changed) {
     try {
       localStorage.setItem(STORAGE_KEY_CLASSES, JSON.stringify(CLASSES));
       localStorage.setItem(STORAGE_KEY_EXAMS, JSON.stringify(EXAMS));
       localStorage.setItem(STORAGE_KEY_SHIFTS, JSON.stringify(WORK_SHIFTS_24H));
       localStorage.setItem(STORAGE_KEY_NOTES, JSON.stringify(PERSONAL_NOTES));
       localStorage.setItem(STORAGE_KEY_CHANGELOG, JSON.stringify(CALENDAR_CHANGELOG));
-      const stamp = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-      localStorage.setItem(STORAGE_KEY_STAMP, `${sourceLabel} ${stamp}`);
+      if (remoteUpdatedAtMs > 0) {
+        localStorage.setItem(STORAGE_KEY_UPDATED_AT, String(remoteUpdatedAtMs));
+      }
+      const stampTime = remoteUpdatedAtMs > 0
+        ? new Date(remoteUpdatedAtMs).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+        : new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      localStorage.setItem(STORAGE_KEY_STAMP, `${sourceLabel} ${stampTime}`);
     } catch (e) {}
     updateStorageBadge();
     updateChangelogBadge();
     refreshAllViews();
-
-    if (healRes.healed && !window._hasAutoPushedHeal && GITHUB_CONFIG && GITHUB_CONFIG.repo && GITHUB_CONFIG.token) {
-      window._hasAutoPushedHeal = true;
-      pushScheduleToGithub('Авто-восстановление пар и кабинетов экзаменов', false);
-    }
   }
   return changed;
 }
 
+// Загрузка самого свежего расписания с GitHub для всех пользователей (с обходом кэша CDN)
 async function pullScheduleFromGithub(manualTrigger = false, silent = false) {
   if (manualTrigger) {
     saveGithubConfigFromInputs();
   }
-  const repo = (GITHUB_CONFIG && GITHUB_CONFIG.repo) || detectGithubPagesRepo();
-  const branch = (GITHUB_CONFIG && GITHUB_CONFIG.branch) || 'main';
-  const configuredPath = (GITHUB_CONFIG && GITHUB_CONFIG.path) || 'data/schedule.json';
+  const cfg = getEffectiveGithubConfig();
+  const repo = cfg.repo || detectGithubPagesRepo() || DEFAULT_GITHUB_REPO;
+  const branch = cfg.branch || 'main';
+  const configuredPath = cfg.path || 'data/schedule.json';
   const candidatePaths = [...new Set([configuredPath, 'data/schedule.json', 'schedule.json'])];
-  const token = (GITHUB_CONFIG && GITHUB_CONFIG.token) || '';
+  const token = cfg.token || '';
+
+  const pullIconEl = document.getElementById('headerPullIcon');
+  if (pullIconEl && !silent) {
+    pullIconEl.classList.add('animate-spin');
+  }
 
   try {
     if (manualTrigger && !silent) {
-      showSyncMessage('⏳ Загружаем актуальный файл расписания с GitHub...');
+      showSyncMessage('⏳ Загружаем актуальное расписание с GitHub...');
     }
 
-    let parsedData = null;
-    let foundPath = configuredPath;
+    const candidatesFound = [];
 
     if (repo) {
-      // Сначала проверяем, не лежит ли в корне репозитория нераспакованный ZIP-архив (например, загруженный через приложение GitHub)
-      try {
-        const zipUnpackRes = await checkAndUnpackRemoteZipInRepo(repo, branch, token, manualTrigger, silent);
-        if (zipUnpackRes && zipUnpackRes.scheduleData) {
-          parsedData = zipUnpackRes.scheduleData;
-          foundPath = `${zipUnpackRes.zipName} ➔ data/schedule.json (распакован автоматически)`;
-        }
-      } catch (zipErr) {}
+      // Проверяем нераспакованный ZIP только при ручном нажатии при наличии токена
+      if (manualTrigger && token) {
+        try {
+          const zipUnpackRes = await checkAndUnpackRemoteZipInRepo(repo, branch, token, manualTrigger, silent);
+          if (zipUnpackRes && zipUnpackRes.scheduleData) {
+            candidatesFound.push({
+              data: zipUnpackRes.scheduleData,
+              path: `${zipUnpackRes.zipName} ➔ data/schedule.json`,
+              ts: getPayloadTimestampMs(zipUnpackRes.scheduleData) || Date.now()
+            });
+          }
+        } catch (zipErr) {}
+      }
 
       const headers = { 'Accept': 'application/vnd.github.v3+json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
+      // 1. Запрашиваем через GitHub Contents API (мгновенно отдаёт самый свежий коммит без задержки CDN!)
       for (const pathCandidate of candidatePaths) {
         try {
           const apiUrl = `https://api.github.com/repos/${repo}/contents/${pathCandidate}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`;
@@ -234,144 +297,237 @@ async function pullScheduleFromGithub(manualTrigger = false, silent = false) {
           if (resp.ok) {
             const meta = await resp.json();
             if (meta && meta.content) {
-              parsedData = JSON.parse(decodeUtf8Base64(meta.content));
-              foundPath = pathCandidate;
-              break;
+              const parsed = JSON.parse(decodeUtf8Base64(meta.content));
+              if (parsed && (parsed.classes || parsed.exams)) {
+                candidatesFound.push({
+                  data: parsed,
+                  path: pathCandidate,
+                  ts: getPayloadTimestampMs(parsed)
+                });
+                break;
+              }
             }
           }
         } catch (e) {}
       }
 
-      if (!parsedData) {
-        for (const pathCandidate of candidatePaths) {
-          try {
-            const rawUrl = `https://raw.githubusercontent.com/${repo}/${branch}/${pathCandidate}?t=${Date.now()}`;
-            const rawResp = await fetch(rawUrl, { cache: 'no-store' });
-            if (rawResp.ok) {
-              parsedData = await rawResp.json();
-              foundPath = pathCandidate;
+      // 2. Запрашиваем также raw.githubusercontent.com (на случай лимита API у неавторизованных пользователей)
+      for (const pathCandidate of candidatePaths) {
+        try {
+          const rawUrl = `https://raw.githubusercontent.com/${repo}/${branch}/${pathCandidate}?t=${Date.now()}`;
+          const rawResp = await fetch(rawUrl, { cache: 'no-store' });
+          if (rawResp.ok) {
+            const parsed = await rawResp.json();
+            if (parsed && (parsed.classes || parsed.exams)) {
+              candidatesFound.push({
+                data: parsed,
+                path: pathCandidate,
+                ts: getPayloadTimestampMs(parsed)
+              });
               break;
             }
-          } catch (e) {}
-        }
+          }
+        } catch (e) {}
       }
     }
 
-    if (!parsedData) {
-      for (const pathCandidate of candidatePaths) {
-        try {
+    // 3. Также проверяем локальный файл на самом домене сайта
+    for (const pathCandidate of candidatePaths) {
+      try {
+        if (window.location && window.location.protocol && window.location.protocol.startsWith('http')) {
           const sameOriginUrl = new URL(`${pathCandidate}?t=${Date.now()}`, window.location.href).href;
           const resp = await fetch(sameOriginUrl, { cache: 'no-store' });
           if (resp.ok) {
-            parsedData = await resp.json();
-            foundPath = pathCandidate;
-            break;
+            const parsed = await resp.json();
+            if (parsed && (parsed.classes || parsed.exams)) {
+              candidatesFound.push({
+                data: parsed,
+                path: pathCandidate,
+                ts: getPayloadTimestampMs(parsed)
+              });
+              break;
+            }
           }
-        } catch (e) {}
-      }
+        }
+      } catch (e) {}
     }
 
-    if (parsedData && applyRemoteSchedulePayload(parsedData, 'GitHub')) {
-      if (manualTrigger && !silent) {
-        showSyncMessage(`✅ Расписание успешно загружено из файла <b>${foundPath}</b> на GitHub!`);
-        showToast('📥 Расписание обновлено из GitHub');
+    if (candidatesFound.length > 0) {
+      // Выбираем самую свежую версию по метке времени updatedAtMs / updatedAt
+      candidatesFound.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+      const best = candidatesFound[0];
+
+      const applied = applyRemoteSchedulePayload(best.data, '☁️ GitHub', manualTrigger);
+      if (!silent) {
+        if (manualTrigger) {
+          showSyncMessage(`✅ Расписание успешно синхронизировано из файла <b>${escapeHtml(best.path)}</b> (${escapeHtml(repo)})!`);
+        }
+        showToast('🔄 Расписание обновлено с сервера GitHub');
       }
-      return true;
+      return applied || true;
     } else if (manualTrigger && !silent) {
-      showSyncMessage(`⚠️ Файл <b>${configuredPath}</b> пока не найден в репозитории. Нажми «☁️ Обновить schedule.json на GitHub» или разверни модульную структуру.`, true);
+      showSyncMessage(`⚠️ Файл <b>${escapeHtml(configuredPath)}</b> пока не найден в репозитории <code>${escapeHtml(repo)}</code>.`, true);
     }
   } catch (err) {
     if (manualTrigger && !silent) {
-      showSyncMessage(`❌ Не удалось загрузить файл с GitHub: ${err.message}`, true);
+      showSyncMessage(`❌ Не удалось загрузить файл с GitHub: ${escapeHtml(err.message)}`, true);
+    }
+  } finally {
+    if (pullIconEl) {
+      pullIconEl.classList.remove('animate-spin');
     }
   }
   return false;
 }
 
-async function pushScheduleToGithub(label = 'Обновление', manualTrigger = false) {
+// Вспомогательная функция записи одного пути расписания с авто-повтором при конфликте SHA (409 / 422)
+async function putScheduleFileWithRetry(repo, branch, path, token, jsonPretty, commitMessage, maxRetries = 3) {
+  const apiUrl = `https://api.github.com/repos/${repo}/contents/${path}`;
+  const headers = {
+    'Accept': 'application/vnd.github.v3+json',
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  };
+  const encodedContent = encodeUtf8Base64(jsonPretty);
+
+  let lastError = null;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      let currentSha = null;
+      const shaCheckUrl = `${apiUrl}?ref=${encodeURIComponent(branch)}&t=${Date.now()}_${attempt}`;
+      const getResp = await fetch(shaCheckUrl, { headers, cache: 'no-store' });
+      if (getResp.ok) {
+        const existingMeta = await getResp.json();
+        if (existingMeta && existingMeta.sha) {
+          currentSha = existingMeta.sha;
+        }
+      }
+
+      const putBody = {
+        message: commitMessage,
+        content: encodedContent,
+        branch: branch
+      };
+      if (currentSha) putBody.sha = currentSha;
+
+      const putResp = await fetch(apiUrl, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(putBody)
+      });
+
+      const putData = await putResp.json();
+      if (putResp.ok) {
+        return putData;
+      }
+
+      // Если конфликт SHA (409 или 422), ждём 350 мс и запрашиваем свежий SHA заново
+      if ((putResp.status === 409 || putResp.status === 422) && attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 350 * attempt));
+        continue;
+      }
+
+      throw new Error(putData.message || `HTTP ${putResp.status}`);
+    } catch (err) {
+      lastError = err;
+      if (attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 350 * attempt));
+      }
+    }
+  }
+  throw lastError || new Error('Не удалось записать файл на GitHub');
+}
+
+// Надёжная последовательная очередь отправки изменений расписания на GitHub при каждом изменении событий
+window._ghPushQueue = Promise.resolve();
+window._ghPushInFlightCount = 0;
+
+function pushScheduleToGithub(label = 'Обновление', manualTrigger = false) {
   if (manualTrigger) {
     saveGithubConfigFromInputs();
   }
-  const repo = (GITHUB_CONFIG && GITHUB_CONFIG.repo) || detectGithubPagesRepo();
-  const branch = (GITHUB_CONFIG && GITHUB_CONFIG.branch) || 'main';
-  const path = (GITHUB_CONFIG && GITHUB_CONFIG.path) || 'data/schedule.json';
-  const token = (GITHUB_CONFIG && GITHUB_CONFIG.token) || '';
+  const cfg = getEffectiveGithubConfig();
+  const repo = cfg.repo || detectGithubPagesRepo() || DEFAULT_GITHUB_REPO;
+  const branch = cfg.branch || 'main';
+  const path = cfg.path || 'data/schedule.json';
+  const token = cfg.token || '';
 
   if (!repo || !token) {
     if (manualTrigger) {
-      showSyncMessage('⚠️ Укажи репозиторий (например, <code>username/repo</code>) и свой GitHub Personal Access Token для записи файла на GitHub.', true);
+      showSyncMessage('⚠️ Укажи репозиторий (например, <code>klaycher/Calen</code>) и свой GitHub Personal Access Token для записи файла на GitHub.', true);
+      showToast('⚠️ Укажи GitHub Token в настройках базы', true);
     }
-    return false;
+    return Promise.resolve(false);
   }
 
-  const btn = document.getElementById('ghPushBtn');
-  if (btn && manualTrigger) {
-    btn.disabled = true;
-    btn.innerHTML = '<span>⏳ Сохранение в GitHub...</span>';
-  }
+  window._ghPushInFlightCount = (window._ghPushInFlightCount || 0) + 1;
+  const badge = document.getElementById('storageStatusBadge');
+  if (badge) badge.textContent = '⏳ Синхр. с GitHub...';
 
-  try {
-    const apiUrl = `https://api.github.com/repos/${repo}/contents/${path}`;
-    const headers = {
-      'Accept': 'application/vnd.github.v3+json',
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    };
+  const runPushTask = async () => {
+    const btn = document.getElementById('ghPushBtn');
+    if (btn && manualTrigger) {
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳ Сохранение в GitHub...</span>';
+    }
 
-    let currentSha = null;
-    const shaCheckUrl = `${apiUrl}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`;
-    const getResp = await fetch(shaCheckUrl, { headers, cache: 'no-store' });
-    if (getResp.ok) {
-      const existingMeta = await getResp.json();
-      if (existingMeta && existingMeta.sha) {
-        currentSha = existingMeta.sha;
+    try {
+      // Формируем самый актуальный снимок базы на момент выполнения очереди
+      const payloadObj = buildSchedulePayload(label);
+      const jsonPretty = JSON.stringify(payloadObj, null, 2);
+      const commitMessage = `Обновление расписания 1Б (v1.0.1): ${label}`;
+
+      await putScheduleFileWithRetry(repo, branch, path, token, jsonPretty, commitMessage, 3);
+
+      // Если в корне репозитория также есть дублирующий schedule.json (от старых версий), обновляем и его, чтобы оба пути отдавали одинаковые актуальные данные
+      if (path !== 'schedule.json') {
+        try {
+          const rootCheckUrl = `https://api.github.com/repos/${repo}/contents/schedule.json?ref=${encodeURIComponent(branch)}&t=${Date.now()}`;
+          const rootResp = await fetch(rootCheckUrl, {
+            headers: {
+              'Accept': 'application/vnd.github.v3+json',
+              'Authorization': `Bearer ${token}`
+            },
+            cache: 'no-store'
+          });
+          if (rootResp.ok) {
+            await putScheduleFileWithRetry(repo, branch, 'schedule.json', token, jsonPretty, commitMessage, 2);
+          }
+        } catch (e) {}
+      }
+
+      const stamp = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      try {
+        localStorage.setItem(STORAGE_KEY_STAMP, `☁️ GitHub ${stamp}`);
+        localStorage.setItem(STORAGE_KEY_UPDATED_AT, String(payloadObj.updatedAtMs));
+      } catch (e) {}
+      updateStorageBadge();
+
+      if (manualTrigger) {
+        showSyncMessage(`✅ Файл <b>${escapeHtml(path)}</b> в репозитории <b>${escapeHtml(repo)}</b> (${escapeHtml(branch)}) успешно обновлён!`);
+      }
+      showToast(`☁️ Синхронизировано с GitHub (${label})`);
+      return true;
+    } catch (err) {
+      if (manualTrigger) {
+        showSyncMessage(`❌ Ошибка записи в GitHub: <b>${escapeHtml(err.message)}</b>`, true);
+      } else {
+        showToast(`⚠️ Ошибка синхронизации с GitHub: ${err.message}`, true);
+      }
+      return false;
+    } finally {
+      window._ghPushInFlightCount = Math.max(0, (window._ghPushInFlightCount || 1) - 1);
+      updateStorageBadge();
+      if (btn && manualTrigger) {
+        btn.disabled = false;
+        btn.innerHTML = '<span>☁️ Обновить schedule.json на GitHub</span>';
       }
     }
+  };
 
-    const payloadObj = buildSchedulePayload(label);
-    const jsonPretty = JSON.stringify(payloadObj, null, 2);
-    const putBody = {
-      message: `Обновление расписания 1Б (v1.0): ${label}`,
-      content: encodeUtf8Base64(jsonPretty),
-      branch: branch
-    };
-    if (currentSha) putBody.sha = currentSha;
-
-    const putResp = await fetch(apiUrl, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify(putBody)
-    });
-
-    const putData = await putResp.json();
-    if (!putResp.ok) {
-      throw new Error(putData.message || `HTTP ${putResp.status}`);
-    }
-
-    const stamp = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-    try {
-      localStorage.setItem(STORAGE_KEY_STAMP, `☁️ GitHub ${stamp}`);
-    } catch (e) {}
-    updateStorageBadge();
-
-    if (manualTrigger) {
-      showSyncMessage(`✅ Файл <b>${path}</b> в репозитории <b>${repo}</b> (${branch}) успешно обновлён!`);
-    }
-    showToast(`☁️ Файл ${path} на GitHub обновлён`);
-    return true;
-  } catch (err) {
-    if (manualTrigger) {
-      showSyncMessage(`❌ Ошибка записи в GitHub: <b>${err.message}</b>`, true);
-    } else {
-      showToast(`⚠️ Локально сохранено (ошибка GitHub: ${err.message})`, true);
-    }
-    return false;
-  } finally {
-    if (btn && manualTrigger) {
-      btn.disabled = false;
-      btn.innerHTML = '<span>☁️ Обновить schedule.json на GitHub</span>';
-    }
-  }
+  const queuedPromise = window._ghPushQueue.then(runPushTask, runPushTask);
+  window._ghPushQueue = queuedPromise.catch(() => {});
+  return queuedPromise;
 }
 
 function downloadScheduleJsonFile() {
@@ -391,7 +547,7 @@ function downloadScheduleJsonFile() {
 
 // ============================================================================
 // ВСТРОЕННЫЙ РАСПАКОВЩИК ZIP-АРХИВОВ В БРАУЗЕРЕ (БЕЗ ВНЕШНИХ ЗАВИСИМОСТЕЙ)
-// И УНИВЕРСАЛЬНОЕ ОБНОВЛЕНИЕ МОДУЛЕЙ / АВТО-РАСПАКОВКА ZIP НА GITHUB (v1.0)
+// И УНИВЕРСАЛЬНОЕ ОБНОВЛЕНИЕ МОДУЛЕЙ / АВТО-РАСПАКОВКА ZIP НА GITHUB (v1.0.1)
 // ============================================================================
 let selectedIndexHtmlFile = null;
 let selectedOriginalFileName = '';
@@ -870,7 +1026,7 @@ async function checkAndUnpackRemoteZipInRepo(repo, branch, token, manualTrigger 
         `Авто-распаковка архива ${targetZip.name} в структуру проекта`,
         [targetZip]
       );
-      logAppReleaseChange('v1.0 (Авто-распаковка ZIP)', `Архив ${targetZip.name} автоматически распакован в репозитории ${repo} (${res.filesCount} файлов).`);
+      logAppReleaseChange('v1.0.1 (Авто-распаковка ZIP)', `Архив ${targetZip.name} автоматически распакован в репозитории ${repo} (${res.filesCount} файлов).`);
       if (!silent) {
         showToast(`📦 Архив ${targetZip.name} распакован на GitHub (${res.filesCount} файлов)!`);
       }
@@ -1034,7 +1190,7 @@ async function onIndexHtmlFileSelected(event) {
   const explicitTarget = (selEl && selEl.value !== 'zip-unpack') ? selEl.value : 'auto';
   const targetRepoPath = resolveTargetRepoPath(file.name, explicitTarget);
   if (commitMsgInput) {
-    commitMsgInput.value = `Обновление модуля ${targetRepoPath} (v1.0)`;
+    commitMsgInput.value = `Обновление модуля ${targetRepoPath} (v1.0.1)`;
   }
 
   if (prevBox) {
@@ -1127,7 +1283,7 @@ async function pushIndexHtmlToGithub() {
         (pct, msg) => showSyncMessage(`⏳ [${pct}%] ${escapeHtml(msg)}`)
       );
 
-      logAppReleaseChange('v1.0 (Распаковка ZIP)', `Архив ${file.name} (${res.filesCount} файлов) распакован и загружен в ${repo} (${branch}).`);
+      logAppReleaseChange('v1.0.1 (Распаковка ZIP)', `Архив ${file.name} (${res.filesCount} файлов) распакован и загружен в ${repo} (${branch}).`);
       showSyncMessage(`🎉 <b>ZIP-архив <code>${escapeHtml(file.name)}</code> успешно распакован на GitHub!</b><br>Записано файлов по папкам: <b>${res.filesCount} шт.</b>${res.deletedZips.length ? `<br>🧹 Удалён старый нераспакованный архив: <code>${escapeHtml(res.deletedZips.join(', '))}</code>` : ''}`);
       showToast(`🚀 ZIP распакован (${res.filesCount} файлов)!`);
 
@@ -1153,7 +1309,7 @@ async function pushIndexHtmlToGithub() {
   const explicitTarget = selEl ? selEl.value : 'auto';
   const origName = selectedOriginalFileName || file.name || 'index.html';
   const targetRepoPath = resolveTargetRepoPath(origName, explicitTarget);
-  const commitMsg = (commitMsgInput && commitMsgInput.value.trim()) || `Обновление модуля ${targetRepoPath} (v1.0)`;
+  const commitMsg = (commitMsgInput && commitMsgInput.value.trim()) || `Обновление модуля ${targetRepoPath} (v1.0.1)`;
 
   if (btn) {
     btn.disabled = true;
@@ -1167,7 +1323,7 @@ async function pushIndexHtmlToGithub() {
     await pushSingleContentToGithub(repo, branch, token, targetRepoPath, fileText, commitMsg);
 
     const kb = (fileText.length / 1024).toFixed(1);
-    logAppReleaseChange('v1.0 (Модуль)', `Модуль ${targetRepoPath} (${kb} КБ) точечно обновлён на GitHub в ветке ${branch}. Коммит: «${commitMsg}».`);
+    logAppReleaseChange('v1.0.1 (Модуль)', `Модуль ${targetRepoPath} (${kb} КБ) точечно обновлён на GitHub в ветке ${branch}. Коммит: «${commitMsg}».`);
 
     showSyncMessage(`🎉 <b>Модуль <code>${escapeHtml(targetRepoPath)}</code> (${kb} КБ) успешно обновлён на GitHub!</b><br>Остальные блоки приложения не перезаписывались.`);
     showToast(`🚀 Модуль ${targetRepoPath} обновлён на GitHub!`);
@@ -1215,12 +1371,12 @@ function closeModularExplorerModal() {
 function getModuleSourceContent(path) {
   if (window.MODULAR_PROJECT_FILES && window.MODULAR_PROJECT_FILES[path]) {
     if (path === 'data/schedule.json') {
-      return JSON.stringify(buildSchedulePayload('Модульная база v1.0'), null, 2);
+      return JSON.stringify(buildSchedulePayload('Модульная база v1.0.1'), null, 2);
     }
     return window.MODULAR_PROJECT_FILES[path];
   }
   if (path === 'data/schedule.json') {
-    return JSON.stringify(buildSchedulePayload('Модульная база v1.0'), null, 2);
+    return JSON.stringify(buildSchedulePayload('Модульная база v1.0.1'), null, 2);
   }
   if (path === 'data/teachers.json') {
     return JSON.stringify(BSU_TEACHERS_DB, null, 2);
@@ -1340,7 +1496,7 @@ async function deployAllModulesToGithub() {
       branch,
       token,
       filesMap,
-      'Модульная сборка v1.0: развёртывание всех модулей по папкам',
+      'Модульная сборка v1.0.1: развёртывание всех модулей по папкам',
       [],
       (pct, msg) => {
         if (progressBar) progressBar.style.width = `${pct}%`;
@@ -1588,7 +1744,7 @@ async function pushModDirectFileToGithub() {
         }
       );
 
-      logAppReleaseChange('v1.0 (Распаковка ZIP)', `ZIP-архив ${file.name} (${deployRes.filesCount} файлов) распакован в ${repo} (${branch}).`);
+      logAppReleaseChange('v1.0.1 (Распаковка ZIP)', `ZIP-архив ${file.name} (${deployRes.filesCount} файлов) распакован в ${repo} (${branch}).`);
 
       const shortSha = deployRes.commitSha ? deployRes.commitSha.substring(0, 7) : 'успешно';
       const repoUrl = `https://github.com/${repo}/tree/${branch}`;
@@ -1649,7 +1805,7 @@ async function pushModDirectFileToGithub() {
     const result = await pushSingleContentToGithub(repo, branch, token, targetPath, fileText, commitMsg);
 
     const kb = (fileText.length / 1024).toFixed(1);
-    logAppReleaseChange('v1.0 (Прямая загрузка)', `Файл ${targetPath} (${kb} КБ) обновлён в ${repo} (${branch}).`);
+    logAppReleaseChange('v1.0.1 (Прямая загрузка)', `Файл ${targetPath} (${kb} КБ) обновлён в ${repo} (${branch}).`);
 
     const commitSha = (result && result.commit && result.commit.sha) ? result.commit.sha.substring(0, 7) : '';
     const fileUrl = `https://github.com/${repo}/blob/${branch}/${targetPath}`;
