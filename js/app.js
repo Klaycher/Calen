@@ -66,7 +66,6 @@ async function triggerPwaPrompt() {
   }
 }
 
-// Проверка статуса запуска при загрузке
 if (isRunningStandalone()) {
   const btn = document.getElementById('pwaInstallHeaderBtn');
   if (btn) {
@@ -75,36 +74,42 @@ if (isRunningStandalone()) {
   }
 }
 
-// Первичный запуск v1.0 + авто-лечение базы из логов
-healScheduleAndExamsFromLogs();
+// Первичный запуск v1.0.1
 applyAdminVisibility();
 updateStorageBadge();
 
 async function bootstrapModularApp() {
-  // 1. Загружаем внешние базы с сайта (teachers.json, releases.json, schedule.json)
+  // 1. Загружаем внешние базы с сайта и GitHub (teachers.json, releases.json, schedule.json)
   await loadModularDataFiles();
 
-  // 2. Проверяем целостность и подтягиваем кабинеты из журнала истории
-  if (typeof healScheduleAndExamsFromLogs === 'function') {
-    healScheduleAndExamsFromLogs();
-  }
-
-  // 3. Отрисовываем интерфейс
+  // 2. Отрисовываем интерфейс
   applyAdminVisibility();
   updateStorageBadge();
   updateChangelogBadge();
+  if (typeof renderAiPhotoQueueUI === 'function') {
+    renderAiPhotoQueueUI();
+  }
   selectToday();
   refreshAllViews();
 
-  // 4. Запрашиваем свежий schedule.json с GitHub
+  // 3. Запрашиваем самый свежий schedule.json напрямую с GitHub API
   pullScheduleFromGithub(false, true);
 
-  // 5. Запускаем периодические таймеры
+  // 4. Автоматически проверяем обновления при возвращении пользователя во вкладку / разблокировке телефона
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      pullScheduleFromGithub(false, true);
+    }
+  });
+  window.addEventListener('focus', () => {
+    pullScheduleFromGithub(false, true);
+  });
+
+  // 5. Периодические таймеры (живая сводка каждую секунду, проверка обновлений на GitHub каждые 30 сек)
   setInterval(renderAssistantTemplate, 1000);
   setInterval(() => {
     pullScheduleFromGithub(false, true);
-  }, 60000);
+  }, 30000);
 }
 
-// Запускаем модульное приложение
 bootstrapModularApp();
