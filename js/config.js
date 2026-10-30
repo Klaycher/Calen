@@ -1,13 +1,15 @@
 // ============================================================================
 // МОДУЛЬ 1: КОНФИГУРАЦИЯ, ГЛОБАЛЬНОЕ СОСТОЯНИЕ И УТИЛИТЫ (js/config.js)
 // ============================================================================
-const APP_VERSION = '1.0';
+const APP_VERSION = '1.0.1';
+const DEFAULT_GITHUB_REPO = 'klaycher/Calen';
 
 const STORAGE_KEY_CLASSES              = 'raspisanie_1b_classes_v2';
 const STORAGE_KEY_EXAMS                = 'raspisanie_1b_exams_v2';
 const STORAGE_KEY_SHIFTS               = 'raspisanie_1b_shifts_v2';
 const STORAGE_KEY_NOTES                = 'raspisanie_1b_notes_v2';
 const STORAGE_KEY_STAMP                = 'raspisanie_1b_updated_stamp';
+const STORAGE_KEY_UPDATED_AT           = 'raspisanie_1b_updated_at_ms_v1';
 const STORAGE_KEY_API                  = 'raspisanie_1b_gemini_key';
 const STORAGE_KEY_ADMIN_SESSION        = 'raspisanie_1b_admin_active_v06';
 const STORAGE_KEY_GH_CONFIG            = 'raspisanie_1b_github_config_v06';
@@ -29,7 +31,7 @@ const DAYS_FULL  = ['Воскресенье','Понедельник','Втор�
 const DAYS_SHORT = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
 const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 
-// Все данные расписания и преподавателей загружаются с сайта (в index.html нет встроенных бэкапов)
+// Все данные расписания и преподавателей загружаются с сайта / GitHub (в index.html нет встроенных бэкапов)
 const DEFAULT_WORK_SHIFTS_24H = [];
 const DEFAULT_PERSONAL_NOTES  = {};
 const DEFAULT_EXAMS           = [];
@@ -98,6 +100,7 @@ function sanitizeClassesData(classesObj) {
         if (!c) return;
         c.start = normalizeTimeToken(c.start || c.time) || '14:10';
         c.end = normalizeTimeToken(c.end) || '';
+        if (c.start === '12:40' && !c.end) c.end = '14:00';
         if (c.start === '14:10' && (c.end === '15:50' || !c.end)) c.end = '15:30';
         if (c.start === '15:50' && (c.end === '17:20' || !c.end)) c.end = '17:10';
         if (c.start === '17:20' && !c.end) c.end = '18:40';
@@ -146,12 +149,72 @@ try {
                 localStorage.getItem(STORAGE_KEY_ADMIN_SESSION) === '1';
 } catch (e) {}
 
+function detectGithubPagesRepo() {
+  try {
+    const host = (window.location && window.location.hostname) || '';
+    const pathParts = ((window.location && window.location.pathname) || '').split('/').filter(Boolean);
+    if (host.endsWith('.github.io')) {
+      const owner = host.split('.')[0];
+      const repo = pathParts[0] || `${owner}.github.io`;
+      return `${owner}/${repo}`;
+    }
+  } catch (e) {}
+  return DEFAULT_GITHUB_REPO;
+}
+
 let GITHUB_CONFIG = loadParsedStorage(STORAGE_KEY_GH_CONFIG, {
-  repo: '',
+  repo: detectGithubPagesRepo(),
   branch: 'main',
   path: 'data/schedule.json',
   token: ''
 });
+if (!GITHUB_CONFIG.repo) {
+  GITHUB_CONFIG.repo = detectGithubPagesRepo();
+}
+if (!GITHUB_CONFIG.branch) {
+  GITHUB_CONFIG.branch = 'main';
+}
+if (!GITHUB_CONFIG.path) {
+  GITHUB_CONFIG.path = 'data/schedule.json';
+}
+
+function getEffectiveGithubConfig() {
+  const repoEl1 = document.getElementById('ghRepoInput');
+  const repoEl2 = document.getElementById('modDeployRepoInput');
+  const branchEl1 = document.getElementById('ghBranchInput');
+  const branchEl2 = document.getElementById('modDeployBranchInput');
+  const pathEl1 = document.getElementById('ghPathInput');
+  const tokenEl1 = document.getElementById('ghTokenInput');
+  const tokenEl2 = document.getElementById('modDeployTokenInput');
+
+  const rawRepo = (repoEl1 && repoEl1.value.trim()) ||
+                  (repoEl2 && repoEl2.value.trim()) ||
+                  (GITHUB_CONFIG && GITHUB_CONFIG.repo) ||
+                  detectGithubPagesRepo() ||
+                  DEFAULT_GITHUB_REPO;
+  const repo = String(rawRepo).trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/+$/, '') || DEFAULT_GITHUB_REPO;
+
+  const branch = ((branchEl1 && branchEl1.value.trim()) ||
+                  (branchEl2 && branchEl2.value.trim()) ||
+                  (GITHUB_CONFIG && GITHUB_CONFIG.branch) ||
+                  'main').trim() || 'main';
+
+  const path = ((pathEl1 && pathEl1.value.trim()) ||
+                (GITHUB_CONFIG && GITHUB_CONFIG.path) ||
+                'data/schedule.json').trim().replace(/^\/+/, '') || 'data/schedule.json';
+
+  const token = ((tokenEl1 && tokenEl1.value.trim()) ||
+                 (tokenEl2 && tokenEl2.value.trim()) ||
+                 (GITHUB_CONFIG && GITHUB_CONFIG.token) ||
+                 '').trim();
+
+  GITHUB_CONFIG = { repo, branch, path, token };
+  try {
+    localStorage.setItem(STORAGE_KEY_GH_CONFIG, JSON.stringify(GITHUB_CONFIG));
+  } catch (e) {}
+
+  return GITHUB_CONFIG;
+}
 
 function formatExamNoteForView(noteStr) {
   if (!noteStr) return '';
@@ -165,19 +228,38 @@ function formatExamNoteForView(noteStr) {
   return clean;
 }
 
+function getPayloadTimestampMs(payload) {
+  if (!payload || typeof payload !== 'object') return 0;
+  if (typeof payload.updatedAtMs === 'number' && payload.updatedAtMs > 0) {
+    return payload.updatedAtMs;
+  }
+  if (payload.updatedAt) {
+    const parsedMs = Date.parse(payload.updatedAt);
+    if (!isNaN(parsedMs) && parsedMs > 0) return parsedMs;
+  }
+  return 0;
+}
+
 function saveAllToStorage(label = 'Изменено') {
+  const nowMs = Date.now();
   try {
     localStorage.setItem(STORAGE_KEY_CLASSES, JSON.stringify(CLASSES));
     localStorage.setItem(STORAGE_KEY_EXAMS, JSON.stringify(EXAMS));
     localStorage.setItem(STORAGE_KEY_SHIFTS, JSON.stringify(WORK_SHIFTS_24H));
     localStorage.setItem(STORAGE_KEY_NOTES, JSON.stringify(PERSONAL_NOTES));
     localStorage.setItem(STORAGE_KEY_CHANGELOG, JSON.stringify(CALENDAR_CHANGELOG));
-    const stamp = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    localStorage.setItem(STORAGE_KEY_UPDATED_AT, String(nowMs));
+    const stamp = new Date(nowMs).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     localStorage.setItem(STORAGE_KEY_STAMP, `${label} ${stamp}`);
   } catch (e) {}
   updateStorageBadge();
-  if (GITHUB_CONFIG && GITHUB_CONFIG.repo && GITHUB_CONFIG.token) {
+
+  const cfg = getEffectiveGithubConfig();
+  if (cfg.repo && cfg.token) {
     pushScheduleToGithub(label, false);
+  } else if (isAdminMode) {
+    const badge = document.getElementById('storageStatusBadge');
+    if (badge) badge.textContent = 'Локально (укажи токен GitHub)';
   }
 }
 
@@ -298,41 +380,77 @@ function updateStorageBadge() {
   }
 }
 
-// Сетевая загрузка JSON-файлов с сайта (data/teachers.json, data/releases.json, data/schedule.json)
-async function fetchRepoJsonFile(relPath) {
-  // 1. Прямая загрузка с текущего сайта (GitHub Pages / веб-сервер)
-  try {
-    if (window.location && window.location.protocol && window.location.protocol.startsWith('http')) {
-      const url = new URL(relPath, window.location.href);
-      url.searchParams.set('t', String(Date.now()));
-      const resp = await fetch(url.href, { cache: 'no-store' });
+// Сетевая загрузка JSON-файлов с сайта и репозитория GitHub с обходом кэша
+async function fetchRepoJsonFile(relPath, preferFreshGithub = false) {
+  const cfg = getEffectiveGithubConfig();
+  const repo = cfg.repo || DEFAULT_GITHUB_REPO;
+  const branch = cfg.branch || 'main';
+  const token = cfg.token || '';
+  const cleanRel = String(relPath || '').replace(/^\/+/, '');
+
+  const tryGithubApi = async () => {
+    if (!repo) return null;
+    try {
+      const headers = { 'Accept': 'application/vnd.github.v3+json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const apiUrl = `https://api.github.com/repos/${repo}/contents/${cleanRel}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`;
+      const resp = await fetch(apiUrl, { headers, cache: 'no-store' });
+      if (resp.ok) {
+        const meta = await resp.json();
+        if (meta && meta.content) {
+          return JSON.parse(decodeUtf8Base64(meta.content));
+        }
+      }
+    } catch (e) {}
+    return null;
+  };
+
+  const tryGithubRaw = async () => {
+    if (!repo) return null;
+    try {
+      const rawUrl = `https://raw.githubusercontent.com/${repo}/${branch}/${cleanRel}?t=${Date.now()}`;
+      const resp = await fetch(rawUrl, { cache: 'no-store' });
       if (resp.ok) {
         return await resp.json();
       }
-    }
-  } catch (e) {}
+    } catch (e) {}
+    return null;
+  };
 
-  // 2. Если указан репозиторий GitHub (или открыто в предпросмотре), загружаем напрямую с сайта репозитория
-  try {
-    const repo = (GITHUB_CONFIG && GITHUB_CONFIG.repo) ||
-                 (typeof detectGithubPagesRepo === 'function' ? detectGithubPagesRepo() : '') ||
-                 'klaycher/Calen';
-    const branch = (GITHUB_CONFIG && GITHUB_CONFIG.branch) || 'main';
-    if (repo) {
-      const rawUrl = `https://raw.githubusercontent.com/${repo}/${branch}/${relPath}?t=${Date.now()}`;
-      const rawResp = await fetch(rawUrl, { cache: 'no-store' });
-      if (rawResp.ok) {
-        return await rawResp.json();
+  const trySameOrigin = async () => {
+    try {
+      if (window.location && window.location.protocol && window.location.protocol.startsWith('http')) {
+        const url = new URL(cleanRel, window.location.href);
+        url.searchParams.set('t', String(Date.now()));
+        const resp = await fetch(url.href, { cache: 'no-store' });
+        if (resp.ok) {
+          return await resp.json();
+        }
       }
-    }
-  } catch (e) {}
+    } catch (e) {}
+    return null;
+  };
 
-  return null;
+  if (preferFreshGithub) {
+    const apiData = await tryGithubApi();
+    if (apiData) return apiData;
+    const [rawData, siteData] = await Promise.all([tryGithubRaw(), trySameOrigin()]);
+    if (rawData && siteData) {
+      return getPayloadTimestampMs(rawData) >= getPayloadTimestampMs(siteData) ? rawData : siteData;
+    }
+    return rawData || siteData;
+  }
+
+  const siteData = await trySameOrigin();
+  if (siteData) return siteData;
+  const rawData = await tryGithubRaw();
+  if (rawData) return rawData;
+  return await tryGithubApi();
 }
 
 async function loadTeachersFromSite() {
   for (const candidatePath of ['data/teachers.json', 'teachers.json']) {
-    const loadedTeachers = await fetchRepoJsonFile(candidatePath);
+    const loadedTeachers = await fetchRepoJsonFile(candidatePath, false);
     if (Array.isArray(loadedTeachers) && loadedTeachers.length > 0) {
       BSU_TEACHERS_DB = loadedTeachers;
       if (typeof renderTeachersSection === 'function') {
@@ -347,11 +465,11 @@ async function loadTeachersFromSite() {
 async function loadModularDataFiles() {
   const inlineFallback = window.__INLINE_MODULAR_DATA__ || null;
 
-  // 1. Справочник преподавателей загружается ТОЛЬКО с сайта (без бэкапа в index.html)
+  // 1. Справочник преподавателей загружается с сайта (без бэкапа в index.html)
   await loadTeachersFromSite();
 
   // 2. Загружаем историю релизов (data/releases.json)
-  const loadedReleases = await fetchRepoJsonFile('data/releases.json') || await fetchRepoJsonFile('releases.json');
+  const loadedReleases = await fetchRepoJsonFile('data/releases.json', false) || await fetchRepoJsonFile('releases.json', false);
   if (Array.isArray(loadedReleases) && loadedReleases.length > 0) {
     DEFAULT_APP_RELEASES = loadedReleases;
   } else if (inlineFallback && Array.isArray(inlineFallback.releases)) {
@@ -363,26 +481,37 @@ async function loadModularDataFiles() {
     : [];
   APP_RELEASES_LOG = [...customOta, ...DEFAULT_APP_RELEASES];
 
-  // 3. Загружаем расписание из файла schedule.json на сайте / GitHub
+  // 3. Сначала читаем локальный кэш, затем подтягиваем свежий schedule.json с GitHub/сайта
   CLASSES         = sanitizeClassesData(loadParsedStorage(STORAGE_KEY_CLASSES, DEFAULT_CLASSES));
   EXAMS           = sanitizeExamsData(loadParsedStorage(STORAGE_KEY_EXAMS, DEFAULT_EXAMS));
   WORK_SHIFTS_24H = loadParsedStorage(STORAGE_KEY_SHIFTS, DEFAULT_WORK_SHIFTS_24H);
   PERSONAL_NOTES  = loadParsedStorage(STORAGE_KEY_NOTES, DEFAULT_PERSONAL_NOTES);
 
+  const localUpdatedAtMs = Number(localStorage.getItem(STORAGE_KEY_UPDATED_AT) || 0);
+  const hasLocalSchedule = Object.keys(CLASSES).length > 0 || EXAMS.length > 0;
+
   for (const candidatePath of ['data/schedule.json', 'schedule.json']) {
-    const schedData = await fetchRepoJsonFile(candidatePath);
-    if (schedData && typeof schedData === 'object') {
-      if (schedData.classes && typeof schedData.classes === 'object') {
-        CLASSES = sanitizeClassesData(schedData.classes);
-      }
-      if (Array.isArray(schedData.exams)) {
-        EXAMS = sanitizeExamsData(schedData.exams);
-      }
-      if (Array.isArray(schedData.shifts)) {
-        WORK_SHIFTS_24H = schedData.shifts;
-      }
-      if (schedData.notes && typeof schedData.notes === 'object') {
-        PERSONAL_NOTES = schedData.notes;
+    const schedData = await fetchRepoJsonFile(candidatePath, true);
+    if (schedData && typeof schedData === 'object' && (schedData.classes || schedData.exams)) {
+      const remoteUpdatedAtMs = getPayloadTimestampMs(schedData);
+      // Применяем серверный файл, если локального кэша ещё нет или серверный файл не старше локального
+      if (!hasLocalSchedule || localUpdatedAtMs === 0 || remoteUpdatedAtMs === 0 || remoteUpdatedAtMs >= localUpdatedAtMs) {
+        if (typeof applyRemoteSchedulePayload === 'function') {
+          applyRemoteSchedulePayload(schedData, 'GitHub', true);
+        } else {
+          if (schedData.classes && typeof schedData.classes === 'object') {
+            CLASSES = sanitizeClassesData(schedData.classes);
+          }
+          if (Array.isArray(schedData.exams)) {
+            EXAMS = sanitizeExamsData(schedData.exams);
+          }
+          if (Array.isArray(schedData.shifts)) {
+            WORK_SHIFTS_24H = schedData.shifts;
+          }
+          if (schedData.notes && typeof schedData.notes === 'object') {
+            PERSONAL_NOTES = schedData.notes;
+          }
+        }
       }
       break;
     }
